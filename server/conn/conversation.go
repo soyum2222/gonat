@@ -5,6 +5,7 @@ import (
 	"github.com/soyum2222/slog"
 	"gonat/interface"
 	"gonat/proto"
+	"io"
 	"net"
 )
 
@@ -29,7 +30,8 @@ func (lc *local_conversation) Monitor() {
 		case <-lc.close_chan:
 			return
 		default:
-			_, err := lc.local_conn.Read(l)
+			_, err := io.ReadFull(lc.local_conn, l)
+			//_, err := lc.local_conn.Read(l)
 			if err != nil {
 				slog.Logger.Error(err)
 				lc.Close()
@@ -40,7 +42,8 @@ func (lc *local_conversation) Monitor() {
 
 			data := make([]byte, data_len, data_len)
 
-			_, err = lc.local_conn.Read(data)
+			_, err = io.ReadFull(lc.local_conn, data)
+			//_, err = lc.local_conn.Read(data)
 			if err != nil {
 				slog.Logger.Error(err)
 				lc.Close()

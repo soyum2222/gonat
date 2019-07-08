@@ -28,6 +28,7 @@ func (u *user_conversation) Monitor() {
 			return
 
 		default:
+
 			n, err := u.user_conn.Read(buf)
 			if err != nil {
 				p := proto.Proto{proto.TCP_CLOSE_CONN, u.id, nil}

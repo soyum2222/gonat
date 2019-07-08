@@ -6,6 +6,7 @@ import (
 	"gonat/client/config"
 	"gonat/interface"
 	"gonat/proto"
+	"io"
 	"net"
 )
 
@@ -27,7 +28,9 @@ func (rc *remote_conversation) Monitor() {
 			return
 
 		default:
-			_, err := rc.remote_conn.Read(l)
+
+			_, err := io.ReadFull(rc.remote_conn, l)
+			//_, err := .Read(l)
 			if err != nil {
 				slog.Logger.Error(err)
 				rc.Close()
@@ -38,7 +41,8 @@ func (rc *remote_conversation) Monitor() {
 
 			data := make([]byte, data_len, data_len)
 
-			_, err = rc.remote_conn.Read(data)
+			_, err = io.ReadFull(rc.remote_conn, data)
+			//_, err = rc.remote_conn.Read(data)
 			if err != nil {
 				slog.Logger.Error(err)
 				rc.Close()
