@@ -100,6 +100,7 @@ func (rc *remote_conversation) Close() {
 	close(rc.close_chan)
 }
 
-func (remote_conversation) Send(b []byte) error {
-	panic("implement me")
+func (rc *remote_conversation) Send(b []byte) error {
+	_, err := rc.remote_conn.Write(b)
+	return err
 }

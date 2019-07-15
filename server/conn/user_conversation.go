@@ -4,12 +4,14 @@ import (
 	"github.com/soyum2222/slog"
 	"gonat/proto"
 	"net"
+	"sync"
 )
 
 type user_conversation struct {
 	id         uint32
 	user_conn  net.Conn
 	local_conn net.Conn
+	close_mu   sync.Mutex
 	close_chan chan struct{}
 }
 
@@ -31,6 +33,7 @@ func (u *user_conversation) Monitor() {
 
 			n, err := u.user_conn.Read(buf)
 			if err != nil {
+				slog.Logger.Info("a client close")
 				p := proto.Proto{proto.TCP_CLOSE_CONN, u.id, nil}
 				data := p.Marshal()
 				slog.Logger.Error(err)
@@ -71,6 +74,8 @@ func (u *user_conversation) send_to_local(b []byte) error {
 
 func (u *user_conversation) Close() {
 
+	u.close_mu.Lock()
+	defer u.close_mu.Unlock()
 	u.user_conn.Close()
 
 	select {

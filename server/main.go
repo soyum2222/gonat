@@ -10,8 +10,11 @@ import (
 )
 
 func main() {
-	go http.ListenAndServe(":8808", nil)
+
 	config.Load()
+	if config.Debug {
+		go http.ListenAndServe(":8808", nil)
+	}
 
 	var err error
 	slog.Logger, err = slog.DefaultNew(func() slog.SLogConfig {
@@ -24,5 +27,5 @@ func main() {
 		panic(err)
 	}
 
-	conn.Start(strconv.Itoa(config.Client_port))
+	conn.Start(strconv.Itoa(config.Port))
 }

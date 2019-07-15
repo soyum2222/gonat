@@ -10,7 +10,7 @@ import (
 )
 
 type local_conversation struct {
-	user_conversation_map map[uint32]_interface.Conversation
+	user_conversation_map map[uint32]_interface.Conversation //an user conn closed I didnt delete it,because I dont know how to do well . And I dont want use sync.Map :)
 	user_listener         net.Listener
 	local_conn            net.Conn
 	close_chan            chan struct{}

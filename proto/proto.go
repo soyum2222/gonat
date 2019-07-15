@@ -2,8 +2,6 @@ package proto
 
 import (
 	"encoding/binary"
-	"errors"
-	"net"
 )
 
 const (
@@ -12,6 +10,7 @@ const (
 	TCP_COMM
 	TCP_SEND_PROTO
 	TCP_DIAL_ERROR
+	TCP_PORT_BIND_ERROR
 )
 
 type Proto struct {
@@ -43,32 +42,4 @@ func (p *Proto) Unmarshal(b []byte) {
 	p.Kind = binary.BigEndian.Uint32(kind_b)
 	p.ConversationID = binary.BigEndian.Uint32(id_b)
 
-}
-
-func GetPort(conn net.Conn) (uint32, error) {
-
-	l := make([]byte, 8, 8)
-	if _, err := conn.Read(l); err != nil {
-		return 0, err
-	}
-	l_uint := binary.BigEndian.Uint64(l)
-	b := make([]byte, l_uint, l_uint)
-
-	if _, err := conn.Read(b); err != nil {
-		return 0, err
-	}
-
-	if b[0] != TCP_SEND_PROTO {
-		return 0, errors.New("msg not port")
-	}
-
-	return binary.BigEndian.Uint32(b[1:]), nil
-}
-
-func SendCreateConn() []byte {
-
-	b := make([]byte, 9, 9)
-	binary.BigEndian.PutUint64(b, 1)
-	b[8] = TCP_CREATE_CONN
-	return b
 }

@@ -2,6 +2,7 @@ package conn
 
 import (
 	"encoding/binary"
+	"github.com/soyum2222/slog"
 	"gonat/proto"
 	"net"
 	"strconv"
@@ -30,8 +31,12 @@ func local_task(local_con net.Conn) {
 	_, err := local_con.Read(port_b)
 	port := binary.BigEndian.Uint32(port_b)
 
+	slog.Logger.Info("client link port :", port)
 	listen, err := net.Listen("tcp", ":"+strconv.Itoa(int(port)))
 	if err != nil {
+		p := proto.Proto{Kind: proto.TCP_PORT_BIND_ERROR}
+		local_con.Write(p.Marshal())
+		slog.Logger.Error(err)
 		local_con.Close()
 		return
 	}

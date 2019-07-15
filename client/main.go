@@ -10,7 +10,11 @@ func main() {
 
 	config.Load()
 	var err error
-	slog.Logger, err = slog.DefaultNew(slog.TestSLogConfig)
+	slog.Logger, err = slog.DefaultNew(func() slog.SLogConfig {
+		cfg := slog.TestSLogConfig()
+		cfg.Debug = config.Debug
+		return cfg
+	})
 	if err != nil {
 		panic(err)
 	}
