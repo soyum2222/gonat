@@ -10,6 +10,7 @@ import (
 
 func Start(port string) {
 
+	slog.Logger.Info("server start")
 	l, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		panic(err)
