@@ -2,6 +2,7 @@ package conn
 
 import (
 	"encoding/binary"
+	"fmt"
 	"github.com/soyum2222/slog"
 	"gonat/proto"
 	"net"
@@ -10,7 +11,8 @@ import (
 
 func Start(port string) {
 
-	slog.Logger.Info("server start")
+	err := slog.Logger.Info("server start")
+	fmt.Println(err)
 	l, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		panic(err)

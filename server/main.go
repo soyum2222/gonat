@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/soyum2222/slog"
 	"gonat/server/config"
 	"gonat/server/conn"
@@ -12,6 +13,8 @@ import (
 func main() {
 
 	config.Load()
+
+	fmt.Println("config load success")
 	if config.Debug {
 		go http.ListenAndServe(":8808", nil)
 	}
@@ -22,10 +25,10 @@ func main() {
 		cfg.Debug = config.Debug
 		return cfg
 	})
-
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("log create success")
 
 	conn.Start(strconv.Itoa(config.Port))
 }

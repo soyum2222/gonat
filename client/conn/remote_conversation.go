@@ -55,13 +55,14 @@ func (rc *remote_conversation) Monitor() {
 			case proto.TCP_CREATE_CONN:
 				server_con, err := net.Dial("tcp", config.Server_ip)
 				if err != nil {
+					slog.Logger.Error(err)
 					p.Kind = proto.TCP_DIAL_ERROR
 					data := p.Marshal()
-					err = rc.Send(data)
-					if err != nil {
-						rc.remote_conn.Close()
-						close(rc.close_chan)
-					}
+					rc.Send(data)
+					rc.remote_conn.Close()
+					close(rc.close_chan)
+					return
+
 				}
 				sc := server_conversation{}
 				sc.server_conn = server_con
