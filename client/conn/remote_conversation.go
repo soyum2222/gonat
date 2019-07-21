@@ -8,6 +8,7 @@ import (
 	"gonat/proto"
 	"io"
 	"net"
+	"time"
 )
 
 type remote_conversation struct {
@@ -34,6 +35,7 @@ func (rc *remote_conversation) Monitor() {
 			if err != nil {
 				slog.Logger.Error(err)
 				rc.Close()
+				time.Sleep(time.Second * 2)
 				return
 			}
 
@@ -85,6 +87,9 @@ func (rc *remote_conversation) Monitor() {
 
 			case proto.TCP_SEND_PROTO:
 				slog.Logger.Info("remote port :", string(p.Body))
+
+			case proto.TCP_PORT_BIND_ERROR:
+				slog.Logger.Info("remote port already bound please replace remote_port value")
 
 			}
 		}

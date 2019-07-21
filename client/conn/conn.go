@@ -11,7 +11,6 @@ import (
 func Start() {
 
 	for {
-
 		remote_conn, err := net.Dial("tcp", config.Remote_ip)
 		if err != nil {
 			slog.Logger.Error(err)

@@ -28,6 +28,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	defer func() {
+		if err := recover(); err != nil {
+			slog.Logger.Panic(err)
+		}
+	}()
 	fmt.Println("log create success")
 
 	conn.Start(strconv.Itoa(config.Port))

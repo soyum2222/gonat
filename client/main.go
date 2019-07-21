@@ -19,5 +19,11 @@ func main() {
 		panic(err)
 	}
 
+	defer func() {
+		if err := recover(); err != nil {
+			slog.Logger.Panic(err)
+		}
+	}()
+
 	conn.Start()
 }
