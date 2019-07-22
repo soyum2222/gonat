@@ -20,7 +20,7 @@ func main() {
 	}
 
 	var err error
-	slog.Logger, err = slog.DefaultNew(func() slog.SLogConfig {
+	err = slog.DefaultNew(func() slog.SLogConfig {
 		cfg := slog.TestSLogConfig()
 		cfg.Debug = config.Debug
 		return cfg
