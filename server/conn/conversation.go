@@ -5,8 +5,11 @@ import (
 	"github.com/soyum2222/slog"
 	"gonat/interface"
 	"gonat/proto"
+	"gonat/safe"
+	"gonat/server/config"
 	"io"
 	"net"
+	"strconv"
 )
 
 type local_conversation struct {
@@ -14,6 +17,7 @@ type local_conversation struct {
 	user_listener         net.Listener
 	local_conn            net.Conn
 	close_chan            chan struct{}
+	crypto_handler        _interface.Safe
 }
 
 func (lc *local_conversation) Send([]byte) error {
@@ -50,7 +54,7 @@ func (lc *local_conversation) Monitor() {
 				return
 			}
 
-			p.Unmarshal(data)
+			p.Unmarshal(data, lc.crypto_handler)
 
 			switch p.Kind {
 
@@ -90,13 +94,33 @@ func (lc *local_conversation) Close() {
 	lc.local_conn.Close()
 }
 
-func start_conversation(user_listen net.Listener, local_con net.Conn) {
+func start_conversation(port uint32, local_con net.Conn) {
 
 	lc := local_conversation{}
+	lc.crypto_handler = safe.GetSafe(config.Crypt, config.CryptKey)
+	listen, err := net.Listen("tcp", ":"+strconv.Itoa(int(port)))
+	if err != nil {
+		p := proto.Proto{Kind: proto.TCP_PORT_BIND_ERROR}
+		local_con.Write(p.Marshal(lc.crypto_handler))
+		slog.Logger.Error(err)
+		local_con.Close()
+		return
+	}
+
+	addr := listen.Addr().String()
+
+	p := proto.Proto{proto.TCP_SEND_PROTO, 0, []byte(addr)}
+	_, err = local_con.Write(p.Marshal(lc.crypto_handler))
+	if err != nil {
+		local_con.Close()
+		return
+	}
+
 	lc.local_conn = local_con
 	lc.close_chan = make(chan struct{}, 1)
 	lc.user_conversation_map = make(map[uint32]_interface.Conversation)
-	lc.user_listener = user_listen
+	lc.user_listener = listen
+
 	go lc.Monitor()
 
 	for conversation_id := 0; ; conversation_id++ {
@@ -107,14 +131,14 @@ func start_conversation(user_listen net.Listener, local_con net.Conn) {
 			return
 
 		default:
-			user_con, err := user_listen.Accept()
+			user_con, err := listen.Accept()
 			if err != nil {
 				slog.Logger.Error(err)
 				return
 			}
 
 			p := proto.Proto{proto.TCP_CREATE_CONN, uint32(conversation_id), nil}
-			_, err = lc.local_conn.Write(p.Marshal())
+			_, err = lc.local_conn.Write(p.Marshal(lc.crypto_handler))
 			if err != nil {
 				user_con.Close()
 				slog.Logger.Error(err)
@@ -125,6 +149,7 @@ func start_conversation(user_listen net.Listener, local_con net.Conn) {
 			uc.close_chan = make(chan struct{}, 1)
 			uc.id = uint32(conversation_id)
 			uc.user_conn = user_con
+			uc.crypto_handler = lc.crypto_handler
 			lc.user_conversation_map[uc.id] = &uc
 
 			go uc.Monitor()

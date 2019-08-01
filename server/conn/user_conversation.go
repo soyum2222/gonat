@@ -2,17 +2,19 @@ package conn
 
 import (
 	"github.com/soyum2222/slog"
+	"gonat/interface"
 	"gonat/proto"
 	"net"
 	"sync"
 )
 
 type user_conversation struct {
-	id         uint32
-	user_conn  net.Conn
-	local_conn net.Conn
-	close_mu   sync.Mutex
-	close_chan chan struct{}
+	id             uint32
+	user_conn      net.Conn
+	local_conn     net.Conn
+	close_mu       sync.Mutex
+	close_chan     chan struct{}
+	crypto_handler _interface.Safe
 }
 
 func (u *user_conversation) Send(b []byte) error {
@@ -35,7 +37,7 @@ func (u *user_conversation) Monitor() {
 			if err != nil {
 				slog.Logger.Info("a client close")
 				p := proto.Proto{proto.TCP_CLOSE_CONN, u.id, nil}
-				data := p.Marshal()
+				data := p.Marshal(u.crypto_handler)
 				slog.Logger.Error(err)
 				_, err := u.local_conn.Write(data)
 				if err != nil {
@@ -67,7 +69,7 @@ func (u *user_conversation) Monitor() {
 func (u *user_conversation) send_to_local(b []byte) error {
 
 	p := proto.Proto{proto.TCP_COMM, u.id, b}
-	_, err := u.local_conn.Write(p.Marshal())
+	_, err := u.local_conn.Write(p.Marshal(u.crypto_handler))
 	return err
 
 }
