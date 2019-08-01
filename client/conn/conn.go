@@ -5,6 +5,7 @@ import (
 	"github.com/soyum2222/slog"
 	"gonat/client/config"
 	"gonat/interface"
+	"gonat/safe"
 	"net"
 )
 
@@ -36,6 +37,7 @@ func start_conversation(remote_conn net.Conn) {
 	rc.close_chan = make(chan struct{}, 1)
 	rc.remote_conn = remote_conn
 	rc.server_conversation_map = make(map[uint32]_interface.Conversation)
+	rc.crypto_handler = safe.GetSafe(config.Crypt, config.CryptKey)
 
 	rc.Monitor()
 

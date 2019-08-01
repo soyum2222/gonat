@@ -12,6 +12,7 @@ import (
 )
 
 type remote_conversation struct {
+	crypto_handler          _interface.Safe
 	remote_conn             net.Conn
 	server_conversation_map map[uint32]_interface.Conversation
 	close_chan              chan struct{}
@@ -31,7 +32,6 @@ func (rc *remote_conversation) Monitor() {
 		default:
 
 			_, err := io.ReadFull(rc.remote_conn, l)
-			//_, err := .Read(l)
 			if err != nil {
 				slog.Logger.Error(err)
 				rc.Close()
@@ -44,13 +44,13 @@ func (rc *remote_conversation) Monitor() {
 			data := make([]byte, data_len, data_len)
 
 			_, err = io.ReadFull(rc.remote_conn, data)
-			//_, err = rc.remote_conn.Read(data)
 			if err != nil {
 				slog.Logger.Error(err)
 				rc.Close()
 				return
 			}
-			p.Unmarshal(data)
+
+			p.Unmarshal(data, rc.crypto_handler)
 
 			switch p.Kind {
 
@@ -59,7 +59,7 @@ func (rc *remote_conversation) Monitor() {
 				if err != nil {
 					slog.Logger.Error(err)
 					p.Kind = proto.TCP_DIAL_ERROR
-					data := p.Marshal()
+					data := p.Marshal(rc.crypto_handler)
 					rc.Send(data)
 					rc.remote_conn.Close()
 					close(rc.close_chan)
@@ -71,6 +71,7 @@ func (rc *remote_conversation) Monitor() {
 				sc.remote_conn = rc.remote_conn
 				sc.close_chan = make(chan struct{}, 1)
 				sc.id = p.ConversationID
+				sc.crypto_handler = rc.crypto_handler
 				go sc.Monitor()
 				rc.server_conversation_map[p.ConversationID] = &sc
 
@@ -82,8 +83,8 @@ func (rc *remote_conversation) Monitor() {
 					continue
 				}
 
-				slog.Logger.Debug("send server :", string(p.Body))
 				slog.Logger.Debug("send server len:", len(p.Body))
+				slog.Logger.Debug("send server :", string(p.Body))
 
 			case proto.TCP_SEND_PROTO:
 				slog.Logger.Info("remote port :", string(p.Body))

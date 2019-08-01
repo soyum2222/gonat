@@ -2,15 +2,17 @@ package conn
 
 import (
 	"github.com/soyum2222/slog"
+	"gonat/interface"
 	"gonat/proto"
 	"net"
 )
 
 type server_conversation struct {
-	id          uint32
-	remote_conn net.Conn
-	server_conn net.Conn
-	close_chan  chan struct{}
+	id             uint32
+	remote_conn    net.Conn
+	server_conn    net.Conn
+	close_chan     chan struct{}
+	crypto_handler _interface.Safe
 }
 
 func (sc *server_conversation) Monitor() {
@@ -30,7 +32,7 @@ func (sc *server_conversation) Monitor() {
 			if err != nil {
 
 				p := proto.Proto{proto.TCP_CLOSE_CONN, sc.id, nil}
-				_, err := sc.remote_conn.Write(p.Marshal())
+				_, err := sc.remote_conn.Write(p.Marshal(sc.crypto_handler))
 				if err != nil {
 					slog.Logger.Error(err)
 					sc.remote_conn.Close()
@@ -44,7 +46,7 @@ func (sc *server_conversation) Monitor() {
 			slog.Logger.Debug("server receive len : ", n)
 
 			p := proto.Proto{proto.TCP_COMM, sc.id, data[0:n]}
-			_, err = sc.remote_conn.Write(p.Marshal())
+			_, err = sc.remote_conn.Write(p.Marshal(sc.crypto_handler))
 			if err != nil {
 				slog.Logger.Error(err)
 				sc.Close()

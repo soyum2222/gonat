@@ -7,15 +7,17 @@ import (
 	"os"
 )
 
-var Remote_ip, Server_ip string
+var Remote_ip, Server_ip, Crypt, CryptKey string
 var Remote_port int
 var Debug bool
 
 type config struct {
+	Debug      bool   `json:"debug"`
+	RemotePort int    `json:"remote_port"`
 	RemoteIp   string `json:"remote_ip"`
 	ServerIp   string `json:"server_ip"`
-	RemotePort int    `json:"remote_port"`
-	Debug      bool   `json:"debug"`
+	Crypt      string `json:"crypt"`
+	CryptKey   string `json:"crypt_key"`
 }
 
 func Load() {
@@ -27,6 +29,8 @@ func Load() {
 	remote_l := flag.Int("remote_port", 0, "remote listen port")
 	debug := flag.Bool("debug", false, "debug")
 	c := flag.String("c", "", "config file")
+	crypt := flag.String("crypt", "", "crypt type")
+	crypt_key := flag.String("crypt_key", "", "crypt key")
 
 	flag.Parse()
 
@@ -50,12 +54,16 @@ func Load() {
 		Remote_port = cfg.RemotePort
 		Server_ip = cfg.ServerIp
 		Debug = cfg.Debug
-	} else {
+		Crypt = cfg.Crypt
+		CryptKey = cfg.CryptKey
 
+	} else {
+		Crypt = *crypt
 		Server_ip = *server_ip
 		Remote_ip = *remote_ip
 		Remote_port = *remote_l
 		Debug = *debug
+		CryptKey = *crypt_key
 
 	}
 }

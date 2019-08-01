@@ -9,10 +9,13 @@ import (
 
 var Port int
 var Debug bool
+var Crypt, CryptKey string
 
 type config struct {
-	Port  int  `json:"port"`
-	Debug bool `json:"debug"`
+	Port     int    `json:"port"`
+	Debug    bool   `json:"debug"`
+	Crypt    string `json:"crypt"`
+	CryptKey string `json:"crypt_key"`
 }
 
 func Load() {
@@ -20,6 +23,8 @@ func Load() {
 	client_port := flag.Int("client_port", 0, "")
 	debug := flag.Bool("debug", false, "")
 	c := flag.String("c", "", "config file")
+	crypt := flag.String("crypt", "", "crypt type")
+	crypt_key := flag.String("crypt_key", "", "crypt key")
 
 	flag.Parse()
 
@@ -41,11 +46,16 @@ func Load() {
 
 		Debug = cfg.Debug
 		Port = cfg.Port
+		Crypt = cfg.Crypt
+		CryptKey = cfg.CryptKey
 
 	} else {
 
 		Port = *client_port
 		Debug = *debug
+		Debug = *debug
+		CryptKey = *crypt_key
+		Crypt = *crypt
 	}
 
 }

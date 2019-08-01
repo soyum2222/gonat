@@ -2,6 +2,8 @@ package proto
 
 import (
 	"encoding/binary"
+	"github.com/soyum2222/slog"
+	"gonat/interface"
 )
 
 const (
@@ -19,7 +21,15 @@ type Proto struct {
 	Body           []byte
 }
 
-func (p *Proto) Marshal() []byte {
+func (p *Proto) Marshal(crypto_handler _interface.Safe) []byte {
+
+	var err error
+	p.Body, err = crypto_handler.Encrypt(p.Body)
+	if err != nil {
+		slog.Logger.Error(err)
+		return nil
+	}
+
 	kind_b := make([]byte, 4, 4)
 	id_b := make([]byte, 4, 4)
 	len_b := make([]byte, 4, 4)
@@ -33,11 +43,16 @@ func (p *Proto) Marshal() []byte {
 	return body
 }
 
-func (p *Proto) Unmarshal(b []byte) {
+func (p *Proto) Unmarshal(b []byte, crypto_handler _interface.Safe) {
 
 	kind_b := b[0:4]
 	id_b := b[4:8]
 	p.Body = b[8:]
+	var err error
+	p.Body, err = crypto_handler.Decrypt(p.Body)
+	if err != nil {
+		slog.Logger.Error(err)
+	}
 
 	p.Kind = binary.BigEndian.Uint32(kind_b)
 	p.ConversationID = binary.BigEndian.Uint32(id_b)
