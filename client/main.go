@@ -4,6 +4,7 @@ import (
 	"github.com/soyum2222/slog"
 	"gonat/client/config"
 	"gonat/client/conn"
+	"runtime/debug"
 )
 
 func main() {
@@ -21,7 +22,7 @@ func main() {
 
 	defer func() {
 		if err := recover(); err != nil {
-			slog.Logger.Panic(err)
+			slog.Logger.Panic(string(debug.Stack()), err)
 		}
 	}()
 

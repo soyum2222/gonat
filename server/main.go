@@ -7,6 +7,7 @@ import (
 	"gonat/server/conn"
 	"net/http"
 	_ "net/http/pprof"
+	"runtime/debug"
 	"strconv"
 )
 
@@ -31,7 +32,7 @@ func main() {
 
 	defer func() {
 		if err := recover(); err != nil {
-			slog.Logger.Panic(err)
+			slog.Logger.Panic(string(debug.Stack()), err)
 		}
 	}()
 	fmt.Println("log create success")

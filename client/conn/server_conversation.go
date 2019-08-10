@@ -5,12 +5,14 @@ import (
 	"gonat/interface"
 	"gonat/proto"
 	"net"
+	"sync"
 )
 
 type server_conversation struct {
 	id             uint32
 	remote_conn    net.Conn
 	server_conn    net.Conn
+	close_mu       sync.Mutex
 	close_chan     chan struct{}
 	crypto_handler _interface.Safe
 }
@@ -62,6 +64,8 @@ func (sc *server_conversation) Monitor() {
 func (sc *server_conversation) Close() {
 	sc.server_conn.Close()
 
+	sc.close_mu.Lock()
+	defer sc.close_mu.Unlock()
 	select {
 	case _, ok := <-sc.close_chan:
 		if !ok {
