@@ -7,6 +7,7 @@ import (
 	"gonat/interface"
 	"gonat/safe"
 	"net"
+	"time"
 )
 
 func Start() {
@@ -15,6 +16,7 @@ func Start() {
 		remote_conn, err := net.Dial("tcp", config.Remote_ip)
 		if err != nil {
 			slog.Logger.Error(err)
+			time.Sleep(5 * time.Second)
 			continue
 		}
 

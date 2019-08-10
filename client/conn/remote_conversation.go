@@ -8,6 +8,7 @@ import (
 	"gonat/proto"
 	"io"
 	"net"
+	"sync"
 	"time"
 )
 
@@ -16,6 +17,7 @@ type remote_conversation struct {
 	remote_conn             net.Conn
 	server_conversation_map map[uint32]_interface.Conversation
 	close_chan              chan struct{}
+	close_mu                sync.Mutex
 }
 
 func (rc *remote_conversation) Monitor() {
@@ -103,6 +105,8 @@ func (rc *remote_conversation) Close() {
 	for _, v := range rc.server_conversation_map {
 		v.Close()
 	}
+	rc.close_mu.Lock()
+	defer rc.close_mu.Unlock()
 	rc.remote_conn.Close()
 	close(rc.close_chan)
 }
