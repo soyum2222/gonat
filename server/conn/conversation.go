@@ -10,6 +10,7 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"strings"
 )
 
 type local_conversation struct {
@@ -94,10 +95,36 @@ func (lc *local_conversation) Close() {
 	lc.local_conn.Close()
 }
 
-func start_conversation(port uint32, local_con net.Conn) {
+func start_conversation(local_con net.Conn) {
 
 	lc := local_conversation{}
 	lc.crypto_handler = safe.GetSafe(config.Crypt, config.CryptKey)
+
+	len_b := make([]byte, 4, 4)
+	_, err := io.ReadFull(local_con, len_b)
+	if err != nil {
+		slog.Logger.Error(err)
+		return
+	}
+
+	data_b := make([]byte, binary.BigEndian.Uint32(len_b), binary.BigEndian.Uint32(len_b))
+	_, err = io.ReadFull(local_con, data_b)
+	if err != nil {
+		slog.Logger.Error(err)
+		return
+	}
+
+	p := proto.Proto{}
+	p.Unmarshal(data_b, lc.crypto_handler)
+
+	if !strings.HasPrefix(string(p.Body), "gonat_port:") {
+		return
+	}
+
+	port_b := p.Body[len([]byte("gonat_port:")):]
+
+	port := binary.BigEndian.Uint32(port_b)
+
 	listen, err := net.Listen("tcp", ":"+strconv.Itoa(int(port)))
 	if err != nil {
 		p := proto.Proto{Kind: proto.TCP_PORT_BIND_ERROR}
@@ -109,7 +136,7 @@ func start_conversation(port uint32, local_con net.Conn) {
 
 	addr := listen.Addr().String()
 
-	p := proto.Proto{proto.TCP_SEND_PROTO, 0, []byte(addr)}
+	p = proto.Proto{proto.TCP_SEND_PROTO, 0, []byte(addr)}
 	_, err = local_con.Write(p.Marshal(lc.crypto_handler))
 	if err != nil {
 		local_con.Close()
