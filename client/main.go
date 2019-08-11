@@ -4,6 +4,8 @@ import (
 	"github.com/soyum2222/slog"
 	"gonat/client/config"
 	"gonat/client/conn"
+	"net/http"
+	_ "net/http/pprof"
 	"runtime/debug"
 )
 
@@ -25,6 +27,8 @@ func main() {
 			slog.Logger.Panic(string(debug.Stack()), err)
 		}
 	}()
+
+	go http.ListenAndServe(":8808", nil)
 
 	conn.Start()
 }
