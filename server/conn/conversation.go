@@ -106,6 +106,10 @@ func start_conversation(local_con net.Conn) {
 		slog.Logger.Error(err)
 		return
 	}
+	if binary.BigEndian.Uint32(len_b) > 1024 {
+		slog.Logger.Info("the ip client is not gonat client", local_con.RemoteAddr())
+		return
+	}
 
 	data_b := make([]byte, binary.BigEndian.Uint32(len_b), binary.BigEndian.Uint32(len_b))
 	_, err = io.ReadFull(local_con, data_b)
