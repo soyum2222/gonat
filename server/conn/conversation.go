@@ -107,8 +107,7 @@ func start_conversation(local_con net.Conn) {
 		return
 	}
 
-	proto_key := []byte("gonat_port:")
-	if binary.BigEndian.Uint32(len_b) > uint32(len(proto_key)+4) {
+	if binary.BigEndian.Uint32(len_b) > 26 {
 		slog.Logger.Info("the ip client is not gonat client", local_con.RemoteAddr())
 		return
 	}
@@ -127,7 +126,7 @@ func start_conversation(local_con net.Conn) {
 		return
 	}
 
-	port_b := p.Body[len(proto_key):]
+	port_b := p.Body[len([]byte("gonat_port:")):]
 
 	port := binary.BigEndian.Uint32(port_b)
 
