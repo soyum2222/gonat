@@ -1,7 +1,6 @@
 package conn
 
 import (
-	"context"
 	"encoding/binary"
 	"github.com/soyum2222/slog"
 	"gonat/client/config"
@@ -12,7 +11,7 @@ import (
 	"time"
 )
 
-func Start(stop_signal context.Context) {
+func Start() {
 
 	for {
 		remote_conn, err := net.Dial("tcp", config.Remote_ip)
@@ -30,20 +29,7 @@ func Start(stop_signal context.Context) {
 		//		//	continue
 		//		//}
 
-		ctx, cancel := context.WithCancel(context.Background())
-		go func() {
-			select {
-			case <-ctx.Done():
-				return
-			case <-stop_signal.Done():
-				remote_conn.Close()
-				return
-			}
-		}()
 		start_conversation(remote_conn)
-
-		cancel()
-
 	}
 }
 
