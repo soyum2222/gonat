@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/soyum2222/slog"
 	"gonat/client/config"
 	"gonat/client/conn"
@@ -30,5 +31,5 @@ func main() {
 
 	go http.ListenAndServe(":8808", nil)
 
-	conn.Start()
+	conn.Start(context.Background())
 }

@@ -38,7 +38,7 @@ func (lc *local_conversation) Monitor() {
 			_, err := io.ReadFull(lc.local_conn, l)
 			//_, err := lc.local_conn.Read(l)
 			if err != nil {
-				slog.Logger.Error(err)
+				slog.Logger.Error("local conn read error , conn info :", lc.local_conn.LocalAddr(), err)
 				lc.Close()
 				return
 			}
@@ -90,7 +90,10 @@ func (lc *local_conversation) Close() {
 	for _, v := range lc.user_conversation_map {
 		v.Close()
 	}
-	lc.user_listener.Close()
+	err := lc.user_listener.Close()
+	if err != nil {
+		slog.Logger.Error("close user_listener error ", err, " listener info :", lc.user_listener.Addr())
+	}
 	close(lc.close_chan)
 	lc.local_conn.Close()
 }
@@ -103,7 +106,7 @@ func start_conversation(local_con net.Conn) {
 	len_b := make([]byte, 4, 4)
 	_, err := io.ReadFull(local_con, len_b)
 	if err != nil {
-		slog.Logger.Error(err)
+		slog.Logger.Error("local conn read error , conn info :", local_con.LocalAddr(), err)
 		return
 	}
 
