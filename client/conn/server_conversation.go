@@ -17,6 +17,10 @@ type server_conversation struct {
 	crypto_handler _interface.Safe
 }
 
+func (sc *server_conversation) Heartbeat() {
+	//panic("implement me")
+}
+
 func (sc *server_conversation) Monitor() {
 
 	data := make([]byte, 1024, 1024)

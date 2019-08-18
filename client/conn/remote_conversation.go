@@ -20,6 +20,36 @@ type remote_conversation struct {
 	close_mu                sync.Mutex
 }
 
+func (rc *remote_conversation) Heartbeat() {
+
+	for {
+
+		ticker := time.NewTicker(10 * time.Second)
+		defer ticker.Stop()
+		select {
+		case <-rc.close_chan:
+
+			return
+
+		case <-ticker.C:
+
+			p := proto.Proto{
+				Kind:           proto.Heartbeat,
+				ConversationID: 0,
+				Body:           make([]byte, 1, 1),
+			}
+			_, err := rc.remote_conn.Write(p.Marshal(rc.crypto_handler))
+			if err != nil {
+				rc.Close()
+				slog.Logger.Error(err)
+				return
+			}
+
+		}
+
+	}
+}
+
 func (rc *remote_conversation) Monitor() {
 	l := make([]byte, 4, 4)
 	p := proto.Proto{}

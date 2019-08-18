@@ -17,6 +17,10 @@ type user_conversation struct {
 	crypto_handler _interface.Safe
 }
 
+func (u *user_conversation) Heartbeat() {
+	//panic("implement me")
+}
+
 func (u *user_conversation) Send(b []byte) error {
 	_, err := u.user_conn.Write(b)
 	return err
@@ -35,7 +39,7 @@ func (u *user_conversation) Monitor() {
 
 			n, err := u.user_conn.Read(buf)
 			if err != nil {
-				slog.Logger.Info("a client close")
+				slog.Logger.Info("a user close")
 				p := proto.Proto{proto.TCP_CLOSE_CONN, u.id, nil}
 				data := p.Marshal(u.crypto_handler)
 				slog.Logger.Error(err)

@@ -54,6 +54,7 @@ func start_conversation(remote_conn net.Conn) {
 		return
 	}
 
+	go rc.Heartbeat()
 	rc.Monitor()
 
 }

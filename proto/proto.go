@@ -13,6 +13,7 @@ const (
 	TCP_SEND_PROTO
 	TCP_DIAL_ERROR
 	TCP_PORT_BIND_ERROR
+	Heartbeat
 )
 
 type Proto struct {

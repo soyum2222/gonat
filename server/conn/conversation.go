@@ -21,6 +21,10 @@ type local_conversation struct {
 	crypto_handler        _interface.Safe
 }
 
+func (lc *local_conversation) Heartbeat() {
+	panic("implement me")
+}
+
 func (lc *local_conversation) Send([]byte) error {
 	panic("implement me")
 }
@@ -78,6 +82,8 @@ func (lc *local_conversation) Monitor() {
 				slog.Logger.Debug("send user :", string(p.Body))
 				slog.Logger.Debug("send user len:", len(p.Body))
 
+			case proto.Heartbeat:
+				continue
 			default:
 				slog.Logger.Error("bad message:", p.Body)
 
