@@ -12,24 +12,24 @@ https://github.com/soyum2222/gonat/releases
 
 ## How to use
 #### Server
-`./gonat_server -c config.json `  
+` ./gonat_server -c config.json `  
 
 OR  
 
-`./gonat_server  -port=1024
+` ./gonat_server  -port=1024
 -crypt="aes-128-cbc"
 -crypt_key="gonat"
--debug=true
+-debug=true `
 
 #### Client
-`./gonat_client -c config`  
+` ./gonat_client -c config `  
 OR  
 ` ./gonat_client-remote_ip="127.0.0.1:1024"
 -crypt="aes-128-cbc"
 -crypt_key="gonat"
 -server_ip="127.0.0.1:8080"
 -debug=true
--remote_port=8880`
+-remote_port=8880 `
 
 ## About config.json
 #### Server
