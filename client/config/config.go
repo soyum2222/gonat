@@ -7,13 +7,12 @@ import (
 	"os"
 )
 
-var Remote_ip, Server_ip, Crypt, CryptKey string
-var Remote_port int
-var Debug bool
+var CFG config
 
 type config struct {
 	Debug      bool   `json:"debug"`
 	RemotePort int    `json:"remote_port"`
+	LogPath    string `json:"log_path"`
 	RemoteIp   string `json:"remote_ip"`
 	ServerIp   string `json:"server_ip"`
 	Crypt      string `json:"crypt"`
@@ -31,9 +30,10 @@ func Load() {
 	c := flag.String("c", "", "config file")
 	crypt := flag.String("crypt", "", "crypt type")
 	crypt_key := flag.String("crypt_key", "", "crypt key")
+	log_path := flag.String("log_path", "", "log file path")
 
 	flag.Parse()
-
+	cfg := config{}
 	if *c != "" {
 		file, err := os.Open(*c)
 		if err != nil {
@@ -44,26 +44,21 @@ func Load() {
 		if err != nil {
 			panic(err)
 		}
-		cfg := config{}
+
 		err = json.Unmarshal(b, &cfg)
 		if err != nil {
 			panic(err)
 		}
 
-		Remote_ip = cfg.RemoteIp
-		Remote_port = cfg.RemotePort
-		Server_ip = cfg.ServerIp
-		Debug = cfg.Debug
-		Crypt = cfg.Crypt
-		CryptKey = cfg.CryptKey
-
 	} else {
-		Crypt = *crypt
-		Server_ip = *server_ip
-		Remote_ip = *remote_ip
-		Remote_port = *remote_l
-		Debug = *debug
-		CryptKey = *crypt_key
-
+		cfg.Crypt = *crypt
+		cfg.ServerIp = *server_ip
+		cfg.RemoteIp = *remote_ip
+		cfg.RemotePort = *remote_l
+		cfg.Debug = *debug
+		cfg.CryptKey = *crypt_key
+		cfg.LogPath = *log_path
 	}
+
+	CFG = cfg
 }

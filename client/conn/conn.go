@@ -14,7 +14,7 @@ import (
 func Start() {
 
 	for {
-		remote_conn, err := net.Dial("tcp", config.Remote_ip)
+		remote_conn, err := net.Dial("tcp", config.CFG.RemoteIp)
 		if err != nil {
 			slog.Logger.Error(err)
 			time.Sleep(5 * time.Second)
@@ -39,10 +39,10 @@ func start_conversation(remote_conn net.Conn) {
 	rc.close_chan = make(chan struct{}, 1)
 	rc.remote_conn = remote_conn
 	rc.server_conversation_map = make(map[uint32]_interface.Conversation)
-	rc.crypto_handler = safe.GetSafe(config.Crypt, config.CryptKey)
+	rc.crypto_handler = safe.GetSafe(config.CFG.Crypt, config.CFG.CryptKey)
 
 	port := make([]byte, 4, 4)
-	binary.BigEndian.PutUint32(port, uint32(config.Remote_port))
+	binary.BigEndian.PutUint32(port, uint32(config.CFG.RemotePort))
 	p := proto.Proto{
 		Kind:           proto.TCP_SEND_PROTO,
 		ConversationID: 0,

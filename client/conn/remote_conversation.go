@@ -87,7 +87,7 @@ func (rc *remote_conversation) Monitor() {
 			switch p.Kind {
 
 			case proto.TCP_CREATE_CONN:
-				server_con, err := net.Dial("tcp", config.Server_ip)
+				server_con, err := net.Dial("tcp", config.CFG.ServerIp)
 				if err != nil {
 					slog.Logger.Error(err)
 					p.Kind = proto.TCP_DIAL_ERROR

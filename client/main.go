@@ -15,7 +15,8 @@ func main() {
 	var err error
 	err = slog.DefaultNew(func() slog.SLogConfig {
 		cfg := slog.TestSLogConfig()
-		cfg.Debug = config.Debug
+		cfg.Debug = config.CFG.Debug
+		cfg.LogPath = config.CFG.LogPath
 		return cfg
 	})
 	if err != nil {
