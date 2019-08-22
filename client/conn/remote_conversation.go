@@ -94,9 +94,7 @@ func (rc *remote_conversation) Monitor() {
 					data := p.Marshal(rc.crypto_handler)
 					rc.Send(data)
 					rc.remote_conn.Close()
-					close(rc.close_chan)
 					return
-
 				}
 				sc := server_conversation{}
 				sc.server_conn = server_con
