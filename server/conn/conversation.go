@@ -61,6 +61,10 @@ func (lc *local_conversation) Monitor() {
 
 			p.Unmarshal(data, lc.crypto_handler)
 
+			if lc.user_conversation_map[p.ConversationID] == nil {
+				return
+			}
+
 			switch p.Kind {
 
 			case proto.TCP_CLOSE_CONN:
