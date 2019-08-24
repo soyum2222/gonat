@@ -31,7 +31,7 @@ func padding(src []byte, blocksize int) []byte {
 func unpadding(src []byte) []byte {
 	length := len(src)
 	unpadding := int(src[length-1])
-	if length-unpadding >= len(src) {
+	if length-unpadding >= length || length-unpadding < 0 {
 		return []byte{}
 	}
 	return src[:(length - unpadding)]
