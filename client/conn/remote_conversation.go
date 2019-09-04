@@ -136,7 +136,16 @@ func (rc *remote_conversation) Close() {
 	rc.close_mu.Lock()
 	defer rc.close_mu.Unlock()
 	rc.remote_conn.Close()
-	close(rc.close_chan)
+
+	select {
+	case _, ok := <-rc.close_chan:
+		if !ok {
+			return
+		}
+
+	default:
+		close(rc.close_chan)
+	}
 }
 
 func (rc *remote_conversation) Send(b []byte) error {
