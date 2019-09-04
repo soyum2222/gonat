@@ -39,16 +39,10 @@ func Load() {
 		if err != nil {
 			panic(err)
 		}
-		cfg := config{}
 		err = json.Unmarshal(b, &cfg)
 		if err != nil {
 			panic(err)
 		}
-
-		cfg.Debug = cfg.Debug
-		cfg.Port = cfg.Port
-		cfg.Crypt = cfg.Crypt
-		cfg.CryptKey = cfg.CryptKey
 
 	} else {
 
@@ -59,5 +53,7 @@ func Load() {
 		cfg.LogPath = *log_path
 
 	}
+
+	CFG = cfg
 
 }
