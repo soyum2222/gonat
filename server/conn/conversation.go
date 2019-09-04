@@ -111,7 +111,7 @@ func (lc *local_conversation) Close() {
 func start_conversation(local_con net.Conn) {
 
 	lc := local_conversation{}
-	lc.crypto_handler = safe.GetSafe(config.Crypt, config.CryptKey)
+	lc.crypto_handler = safe.GetSafe(config.CFG.Crypt, config.CFG.CryptKey)
 
 	len_b := make([]byte, 4, 4)
 	_, err := io.ReadFull(local_con, len_b)

@@ -16,14 +16,15 @@ func main() {
 	config.Load()
 
 	fmt.Println("config load success")
-	if config.Debug {
+	if config.CFG.Debug {
 		go http.ListenAndServe(":8808", nil)
 	}
 
 	var err error
 	err = slog.DefaultNew(func() slog.SLogConfig {
 		cfg := slog.TestSLogConfig()
-		cfg.Debug = config.Debug
+		cfg.Debug = config.CFG.Debug
+		cfg.LogPath = config.CFG.LogPath
 		return cfg
 	})
 	if err != nil {
@@ -37,5 +38,5 @@ func main() {
 	}()
 	fmt.Println("log create success")
 
-	conn.Start(strconv.Itoa(config.Port))
+	conn.Start(strconv.Itoa(config.CFG.Port))
 }

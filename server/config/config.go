@@ -7,15 +7,14 @@ import (
 	"os"
 )
 
-var Port int
-var Debug bool
-var Crypt, CryptKey string
+var CFG config
 
 type config struct {
 	Port     int    `json:"port"`
 	Debug    bool   `json:"debug"`
 	Crypt    string `json:"crypt"`
 	CryptKey string `json:"crypt_key"`
+	LogPath  string `json:"log_path"`
 }
 
 func Load() {
@@ -25,9 +24,11 @@ func Load() {
 	c := flag.String("c", "", "config file")
 	crypt := flag.String("crypt", "", "crypt type")
 	crypt_key := flag.String("crypt_key", "", "crypt key")
+	log_path := flag.String("log_path", "", "log file path")
 
 	flag.Parse()
 
+	cfg := config{}
 	if *c != "" {
 		file, err := os.Open(*c)
 		if err != nil {
@@ -44,18 +45,19 @@ func Load() {
 			panic(err)
 		}
 
-		Debug = cfg.Debug
-		Port = cfg.Port
-		Crypt = cfg.Crypt
-		CryptKey = cfg.CryptKey
+		cfg.Debug = cfg.Debug
+		cfg.Port = cfg.Port
+		cfg.Crypt = cfg.Crypt
+		cfg.CryptKey = cfg.CryptKey
 
 	} else {
 
-		Port = *client_port
-		Debug = *debug
-		Debug = *debug
-		CryptKey = *crypt_key
-		Crypt = *crypt
+		cfg.Port = *client_port
+		cfg.Debug = *debug
+		cfg.CryptKey = *crypt_key
+		cfg.Crypt = *crypt
+		cfg.LogPath = *log_path
+
 	}
 
 }
