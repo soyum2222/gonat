@@ -35,7 +35,9 @@ func (lc *local_conversation) timeout_monitor() {
 	for {
 		select {
 		case <-lc.timeout.C:
+			slog.Logger.Info("user heartbeat timeout close the conn ", lc.local_conn.LocalAddr())
 			lc.Close()
+			return
 		}
 	}
 }
