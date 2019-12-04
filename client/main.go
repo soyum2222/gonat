@@ -29,7 +29,9 @@ func main() {
 		}
 	}()
 
-	go http.ListenAndServe(":8808", nil)
+	if config.CFG.Debug {
+		go http.ListenAndServe(":8808", nil)
+	}
 
 	conn.Start()
 }

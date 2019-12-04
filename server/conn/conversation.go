@@ -11,6 +11,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type local_conversation struct {
@@ -18,6 +19,7 @@ type local_conversation struct {
 	user_listener         net.Listener
 	local_conn            net.Conn
 	close_chan            chan struct{}
+	timeout               *time.Timer
 	crypto_handler        _interface.Safe
 }
 
@@ -28,11 +30,21 @@ func (lc *local_conversation) Heartbeat() {
 func (lc *local_conversation) Send([]byte) error {
 	panic("implement me")
 }
+func (lc *local_conversation) timeout_monitor() {
+
+	for {
+		select {
+		case <-lc.timeout.C:
+			lc.Close()
+		}
+	}
+}
 
 func (lc *local_conversation) Monitor() {
 	l := make([]byte, 4, 4)
 	p := proto.Proto{}
 
+	lc.timeout = time.NewTimer(30 * time.Second)
 	for {
 
 		select {
@@ -40,7 +52,6 @@ func (lc *local_conversation) Monitor() {
 			return
 		default:
 			_, err := io.ReadFull(lc.local_conn, l)
-			//_, err := lc.local_conn.Read(l)
 			if err != nil {
 				slog.Logger.Error("local conn read error , conn info :", lc.local_conn.LocalAddr(), err)
 				lc.Close()
@@ -87,6 +98,9 @@ func (lc *local_conversation) Monitor() {
 				slog.Logger.Debug("send user len:", len(p.Body))
 
 			case proto.Heartbeat:
+				// 2019-12-24 find a bug , local to server conn disconnect , but server conn is normal
+				// so need a conn heart beat timeout
+				lc.timeout.Reset(30 * time.Second)
 				continue
 			default:
 				slog.Logger.Error("bad message:", p.Body)
