@@ -91,9 +91,11 @@ func (lc *local_conversation) Monitor() {
 			case proto.TCP_COMM:
 				err := lc.user_conversation_map[p.ConversationID].Send(p.Body)
 				if err != nil {
+					//here no need return
 					slog.Logger.Error(err)
-					lc.Close()
-					return
+					continue
+// 					lc.Close()
+// 					return
 				}
 
 				slog.Logger.Debug("send user :", string(p.Body))
