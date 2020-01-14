@@ -7,7 +7,7 @@ import (
 
 func Start(port string) {
 
-	err := slog.Logger.Info("server start")
+	slog.Logger.Info("server start")
 	l, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		panic(err)
@@ -18,13 +18,13 @@ func Start(port string) {
 		if err != nil {
 			panic(err)
 		}
-		go local_task(local_con)
+		go start_conversation(local_con)
 	}
 
 }
 
-func local_task(local_con net.Conn) {
-
-	start_conversation(local_con)
-
-}
+//func local_task(local_con net.Conn) {
+//
+//	start_conversation(local_con)
+//
+//}

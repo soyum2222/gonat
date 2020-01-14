@@ -2,5 +2,6 @@
   "port": 1024,
   "debug": true,
   "crypt": "aes-128-cbc",
-  "crypt_key": "gonat"
+  "crypt_key": "gonat",
+  "log_path": "./log/"
 }

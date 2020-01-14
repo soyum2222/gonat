@@ -31,15 +31,12 @@ func (p *Proto) Marshal(crypto_handler _interface.Safe) []byte {
 		return nil
 	}
 
-	kind_b := make([]byte, 4, 4)
-	id_b := make([]byte, 4, 4)
-	len_b := make([]byte, 4, 4)
-	binary.BigEndian.PutUint32(kind_b, p.Kind)
-	binary.BigEndian.PutUint32(id_b, p.ConversationID)
-	body := append(id_b, p.Body...)
-	body = append(kind_b, body...)
-	binary.BigEndian.PutUint32(len_b, uint32(len(body)))
-	body = append(len_b, body...)
+	//len kind id body
+	body := make([]byte, 12)
+	binary.BigEndian.PutUint32(body[4:8], p.Kind)
+	binary.BigEndian.PutUint32(body[8:12], p.ConversationID)
+	binary.BigEndian.PutUint32(body[0:4], uint32(len(p.Body)+8))
+	body = append(body, p.Body...)
 
 	return body
 }
