@@ -14,6 +14,7 @@ const (
 	TCP_DIAL_ERROR
 	TCP_PORT_BIND_ERROR
 	Heartbeat
+	BAD_MESSAGE
 )
 
 type Proto struct {
@@ -42,7 +43,10 @@ func (p *Proto) Marshal(crypto_handler _interface.Safe) []byte {
 }
 
 func (p *Proto) Unmarshal(b []byte, crypto_handler _interface.Safe) {
-
+	if len(b) < 8 {
+		p.Kind = BAD_MESSAGE
+		return
+	}
 	var err error
 	p.Kind = binary.BigEndian.Uint32(b[0:4])
 	p.ConversationID = binary.BigEndian.Uint32(b[4:8])

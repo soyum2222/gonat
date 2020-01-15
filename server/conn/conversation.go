@@ -11,6 +11,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type local_conversation struct {
@@ -21,6 +22,8 @@ type local_conversation struct {
 	local_conn     net.Conn
 	close_chan     chan struct{}
 	crypto_handler _interface.Safe
+	timeout               *time.Timer
+
 }
 
 func (lc *local_conversation) Heartbeat() {
@@ -30,12 +33,24 @@ func (lc *local_conversation) Heartbeat() {
 func (lc *local_conversation) Send([]byte) error {
 	panic("implement me")
 }
+func (lc *local_conversation) timeout_monitor() {
+
+	for {
+		select {
+		case <-lc.timeout.C:
+			slog.Logger.Info("user heartbeat timeout close the conn ", lc.local_conn.LocalAddr())
+			lc.Close()
+			return
+		}
+	}
+}
 
 //communication to gonat client
 func (lc *local_conversation) Monitor() {
 	l := make([]byte, 4, 4)
 	p := proto.Proto{}
 
+	lc.timeout = time.NewTimer(30 * time.Second)
 	for {
 
 		select {
@@ -84,15 +99,20 @@ func (lc *local_conversation) Monitor() {
 				user_conn, _ := lc.user.Load(p.ConversationID)
 				err := user_conn.Send(p.Body)
 				if err != nil {
+					//here no need return
 					slog.Logger.Error(err)
-					lc.Close()
-					return
+					continue
+// 					lc.Close()
+// 					return
 				}
 
 				slog.Logger.Debug("send user :", string(p.Body))
 				slog.Logger.Debug("send user len:", len(p.Body))
 
 			case proto.Heartbeat:
+				// 2019-12-24 find a bug , local to server conn disconnect , but server conn is normal
+				// so need a conn heart beat timeout
+				lc.timeout.Reset(30 * time.Second)
 				continue
 			default:
 				slog.Logger.Error("bad message:", p.Body)
