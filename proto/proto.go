@@ -45,7 +45,10 @@ func (p *Proto) Marshal(crypto_handler _interface.Safe) []byte {
 }
 
 func (p *Proto) Unmarshal(b []byte, crypto_handler _interface.Safe) {
-
+	if len(b) < 8 {
+		p.Kind = BAD_MESSAGE
+		return
+	}
 	kind_b := b[0:4]
 	id_b := b[4:8]
 	p.Body = b[8:]
