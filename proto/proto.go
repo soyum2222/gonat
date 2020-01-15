@@ -43,16 +43,11 @@ func (p *Proto) Marshal(crypto_handler _interface.Safe) []byte {
 
 func (p *Proto) Unmarshal(b []byte, crypto_handler _interface.Safe) {
 
-	kind_b := b[0:4]
-	id_b := b[4:8]
-	p.Body = b[8:]
 	var err error
-	p.Body, err = crypto_handler.Decrypt(p.Body)
+	p.Kind = binary.BigEndian.Uint32(b[0:4])
+	p.ConversationID = binary.BigEndian.Uint32(b[4:8])
+	p.Body, err = crypto_handler.Decrypt(b[8:])
 	if err != nil {
 		slog.Logger.Error(err)
 	}
-
-	p.Kind = binary.BigEndian.Uint32(kind_b)
-	p.ConversationID = binary.BigEndian.Uint32(id_b)
-
 }
