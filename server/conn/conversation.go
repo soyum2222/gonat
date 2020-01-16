@@ -15,12 +15,14 @@ import (
 )
 
 type local_conversation struct {
-	user_conversation_map map[uint32]_interface.Conversation //an user conn closed I didnt delete it,because I dont know how to do well . And I dont want use sync.Map :)
-	user_listener         net.Listener
-	local_conn            net.Conn
-	close_chan            chan struct{}
-	timeout               *time.Timer
-	crypto_handler        _interface.Safe
+	//map_mutex             sync.RWMutex
+	//user_conversation_map map[uint32]_interface.Conversation //a user conn closed I didnt delete it,because I dont know how to do well . And I dont want use sync.Map :)
+	user           userTable
+	user_listener  net.Listener
+	local_conn     net.Conn
+	close_chan     chan struct{}
+	crypto_handler _interface.Safe
+	timeout        *time.Timer
 }
 
 func (lc *local_conversation) Heartbeat() {
@@ -42,6 +44,7 @@ func (lc *local_conversation) timeout_monitor() {
 	}
 }
 
+//communication to gonat client
 func (lc *local_conversation) Monitor() {
 	l := make([]byte, 4, 4)
 	p := proto.Proto{}
@@ -54,6 +57,7 @@ func (lc *local_conversation) Monitor() {
 			return
 		default:
 			_, err := io.ReadFull(lc.local_conn, l)
+
 			if err != nil {
 				slog.Logger.Error("local conn read error , conn info :", lc.local_conn.LocalAddr(), err)
 				lc.Close()
@@ -74,28 +78,31 @@ func (lc *local_conversation) Monitor() {
 
 			p.Unmarshal(data, lc.crypto_handler)
 
-			if lc.user_conversation_map[p.ConversationID] == nil {
+			if conv, ok := lc.user.Load(p.ConversationID); conv == nil || !ok {
 				continue
 			}
 
 			switch p.Kind {
 
 			case proto.TCP_CLOSE_CONN:
-				lc.user_conversation_map[p.ConversationID].Close()
+				user_conn, _ := lc.user.Load(p.ConversationID)
+				user_conn.Close()
 				continue
 
 			case proto.TCP_DIAL_ERROR:
-				lc.user_conversation_map[p.ConversationID].Close()
+				user_conn, _ := lc.user.Load(p.ConversationID)
+				user_conn.Close()
 				continue
 
 			case proto.TCP_COMM:
-				err := lc.user_conversation_map[p.ConversationID].Send(p.Body)
+				user_conn, _ := lc.user.Load(p.ConversationID)
+				err := user_conn.Send(p.Body)
 				if err != nil {
 					//here no need return
 					slog.Logger.Error(err)
 					continue
-// 					lc.Close()
-// 					return
+					// 					lc.Close()
+					// 					return
 				}
 
 				slog.Logger.Debug("send user :", string(p.Body))
@@ -115,9 +122,13 @@ func (lc *local_conversation) Monitor() {
 }
 
 func (lc *local_conversation) Close() {
-	for _, v := range lc.user_conversation_map {
-		v.Close()
-	}
+	//for _, v := range lc.user_conversation_map {
+	//	v.Close()
+	//}
+	lc.user.Range(func(key uint32, value _interface.Conversation) {
+		value.Close()
+	})
+
 	err := lc.user_listener.Close()
 	if err != nil {
 		slog.Logger.Error("close user_listener error ", err, " listener info :", lc.user_listener.Addr())
@@ -139,7 +150,7 @@ func start_conversation(local_con net.Conn) {
 	}
 
 	if binary.BigEndian.Uint32(len_b) > 26 {
-		slog.Logger.Info("the ip client is not gonat client", local_con.RemoteAddr())
+		slog.Logger.Info("the ip client is not gonat client ", local_con.RemoteAddr())
 		return
 	}
 
@@ -154,6 +165,7 @@ func start_conversation(local_con net.Conn) {
 	p.Unmarshal(data_b, lc.crypto_handler)
 
 	if !strings.HasPrefix(string(p.Body), "gonat_port:") {
+		slog.Logger.Info("the ip client is not gonat client ", local_con.RemoteAddr())
 		return
 	}
 
@@ -164,9 +176,9 @@ func start_conversation(local_con net.Conn) {
 	listen, err := net.Listen("tcp", ":"+strconv.Itoa(int(port)))
 	if err != nil {
 		p := proto.Proto{Kind: proto.TCP_PORT_BIND_ERROR}
-		local_con.Write(p.Marshal(lc.crypto_handler))
+		_, _ = local_con.Write(p.Marshal(lc.crypto_handler))
 		slog.Logger.Error(err)
-		local_con.Close()
+		_ = local_con.Close()
 		return
 	}
 
@@ -175,13 +187,13 @@ func start_conversation(local_con net.Conn) {
 	p = proto.Proto{proto.TCP_SEND_PROTO, 0, []byte(addr)}
 	_, err = local_con.Write(p.Marshal(lc.crypto_handler))
 	if err != nil {
-		local_con.Close()
+		_ = local_con.Close()
 		return
 	}
 
 	lc.local_conn = local_con
 	lc.close_chan = make(chan struct{}, 1)
-	lc.user_conversation_map = make(map[uint32]_interface.Conversation)
+	lc.user.Init()
 	lc.user_listener = listen
 
 	go lc.Monitor()
@@ -208,13 +220,12 @@ func start_conversation(local_con net.Conn) {
 				return
 			}
 			uc := user_conversation{}
-			uc.local_conn = local_con
+			uc.local = &lc
 			uc.close_chan = make(chan struct{}, 1)
 			uc.id = uint32(conversation_id)
 			uc.user_conn = user_con
 			uc.crypto_handler = lc.crypto_handler
-			lc.user_conversation_map[uc.id] = &uc
-
+			lc.user.Store(uc.id, &uc)
 			go uc.Monitor()
 
 		}

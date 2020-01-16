@@ -14,6 +14,7 @@ const (
 	TCP_DIAL_ERROR
 	TCP_PORT_BIND_ERROR
 	Heartbeat
+	BAD_MESSAGE
 )
 
 type Proto struct {
@@ -31,15 +32,12 @@ func (p *Proto) Marshal(crypto_handler _interface.Safe) []byte {
 		return nil
 	}
 
-	kind_b := make([]byte, 4, 4)
-	id_b := make([]byte, 4, 4)
-	len_b := make([]byte, 4, 4)
-	binary.BigEndian.PutUint32(kind_b, p.Kind)
-	binary.BigEndian.PutUint32(id_b, p.ConversationID)
-	body := append(id_b, p.Body...)
-	body = append(kind_b, body...)
-	binary.BigEndian.PutUint32(len_b, uint32(len(body)))
-	body = append(len_b, body...)
+	//len kind id body
+	body := make([]byte, 12)
+	binary.BigEndian.PutUint32(body[4:8], p.Kind)
+	binary.BigEndian.PutUint32(body[8:12], p.ConversationID)
+	binary.BigEndian.PutUint32(body[0:4], uint32(len(p.Body)+8))
+	body = append(body, p.Body...)
 
 	return body
 }
@@ -49,16 +47,11 @@ func (p *Proto) Unmarshal(b []byte, crypto_handler _interface.Safe) {
 		p.Kind = BAD_MESSAGE
 		return
 	}
-	kind_b := b[0:4]
-	id_b := b[4:8]
-	p.Body = b[8:]
 	var err error
-	p.Body, err = crypto_handler.Decrypt(p.Body)
+	p.Kind = binary.BigEndian.Uint32(b[0:4])
+	p.ConversationID = binary.BigEndian.Uint32(b[4:8])
+	p.Body, err = crypto_handler.Decrypt(b[8:])
 	if err != nil {
 		slog.Logger.Error(err)
 	}
-
-	p.Kind = binary.BigEndian.Uint32(kind_b)
-	p.ConversationID = binary.BigEndian.Uint32(id_b)
-
 }
