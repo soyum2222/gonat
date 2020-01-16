@@ -25,7 +25,7 @@ func (uc *userTable) Store(key uint32, v _interface.Conversation) {
 func (uc *userTable) Load(key uint32) (_interface.Conversation, bool) {
 
 	uc.l.RLock()
-	defer uc.l.Unlock()
+	defer uc.l.RUnlock()
 
 	v, ok := uc.m[key]
 	return v, ok

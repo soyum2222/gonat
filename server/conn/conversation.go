@@ -16,14 +16,13 @@ import (
 
 type local_conversation struct {
 	//map_mutex             sync.RWMutex
-	//user_conversation_map map[uint32]_interface.Conversation //an user conn closed I didnt delete it,because I dont know how to do well . And I dont want use sync.Map :)
+	//user_conversation_map map[uint32]_interface.Conversation //a user conn closed I didnt delete it,because I dont know how to do well . And I dont want use sync.Map :)
 	user           userTable
 	user_listener  net.Listener
 	local_conn     net.Conn
 	close_chan     chan struct{}
 	crypto_handler _interface.Safe
-	timeout               *time.Timer
-
+	timeout        *time.Timer
 }
 
 func (lc *local_conversation) Heartbeat() {
@@ -102,8 +101,8 @@ func (lc *local_conversation) Monitor() {
 					//here no need return
 					slog.Logger.Error(err)
 					continue
-// 					lc.Close()
-// 					return
+					// 					lc.Close()
+					// 					return
 				}
 
 				slog.Logger.Debug("send user :", string(p.Body))

@@ -39,7 +39,7 @@ func (u *user_conversation) Monitor() {
 
 			n, err := u.user_conn.Read(buf)
 			if err != nil {
-				slog.Logger.Info("a user close")
+				slog.Logger.Info("a user close :", u.user_conn.RemoteAddr())
 				p := proto.Proto{proto.TCP_CLOSE_CONN, u.id, nil}
 				data := p.Marshal(u.crypto_handler)
 				slog.Logger.Error(err)
@@ -53,7 +53,7 @@ func (u *user_conversation) Monitor() {
 				return
 			}
 
-			slog.Logger.Debug("user receive : ", string(buf))
+			slog.Logger.Debug("user addr : ", u.user_conn.RemoteAddr(), " user receive : ", string(buf))
 			slog.Logger.Debug("user receive len : ", n)
 
 			err = u.send_to_local(buf[0:n])
