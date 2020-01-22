@@ -122,6 +122,9 @@ func (rc *remote_conversation) Monitor() {
 			case proto.TCP_PORT_BIND_ERROR:
 				slog.Logger.Info("remote port already bound please replace remote_port value")
 
+			case proto.TCP_CLOSE_CONN:
+				rc.server_conversation_map[p.ConversationID].Close()
+
 			}
 		}
 

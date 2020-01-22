@@ -1,6 +1,8 @@
 package proto
 
 import (
+	"encoding/binary"
+	"fmt"
 	"gonat/safe"
 	"testing"
 )
@@ -24,5 +26,11 @@ func Test01(t *testing.T) {
 	} else {
 		t.Fail()
 	}
+
+}
+
+func Test02(t *testing.T) {
+
+	fmt.Println(binary.BigEndian.Uint32([]byte{0, 0, 1}))
 
 }

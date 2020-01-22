@@ -7,6 +7,7 @@ import (
 	"gonat/interface"
 	"gonat/proto"
 	"gonat/safe"
+	"gonat/sign"
 	"net"
 	"time"
 )
@@ -21,14 +22,6 @@ func Start() {
 			continue
 		}
 
-		//port := make([]byte, 4, 4)
-		//		//binary.BigEndian.PutUint32(port, uint32(config.Remote_port))
-		//		//_, err = remote_conn.Write(port)
-		//		//if err != nil {
-		//		//	slog.Logger.Error(err)
-		//		//	continue
-		//		//}
-
 		start_conversation(remote_conn)
 	}
 }
@@ -42,11 +35,13 @@ func start_conversation(remote_conn net.Conn) {
 	rc.crypto_handler = safe.GetSafe(config.CFG.Crypt, config.CFG.CryptKey)
 
 	port := make([]byte, 4, 4)
+
 	binary.BigEndian.PutUint32(port, uint32(config.CFG.RemotePort))
+
 	p := proto.Proto{
 		Kind:           proto.TCP_SEND_PROTO,
 		ConversationID: 0,
-		Body:           append([]byte("gonat_port:"), port...),
+		Body:           sign.Signature(port),
 	}
 	_, err := rc.remote_conn.Write(p.Marshal(rc.crypto_handler))
 	if err != nil {

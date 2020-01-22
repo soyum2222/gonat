@@ -7,10 +7,10 @@ import (
 	"gonat/proto"
 	"gonat/safe"
 	"gonat/server/config"
+	"gonat/sign"
 	"io"
 	"net"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -142,36 +142,35 @@ func start_conversation(local_con net.Conn) {
 	lc := local_conversation{}
 	lc.crypto_handler = safe.GetSafe(config.CFG.Crypt, config.CFG.CryptKey)
 
-	len_b := make([]byte, 4, 4)
-	_, err := io.ReadFull(local_con, len_b)
+	length := make([]byte, 4, 4)
+	_, err := io.ReadFull(local_con, length)
 	if err != nil {
-		slog.Logger.Error("local conn read error , conn info :", local_con.LocalAddr(), err)
+		slog.Logger.Error("local conn read error , conn info : ", local_con.LocalAddr(), err)
 		return
 	}
 
-	if binary.BigEndian.Uint32(len_b) > 26 {
-		slog.Logger.Info("the ip client is not gonat client ", local_con.RemoteAddr())
+	//signature verification
+	if binary.BigEndian.Uint32(length) > 0xff { //0xff is a casual value just dont want length is to long
+		slog.Logger.Info("message is too long : ", local_con.RemoteAddr())
 		return
 	}
 
-	data_b := make([]byte, binary.BigEndian.Uint32(len_b), binary.BigEndian.Uint32(len_b))
-	_, err = io.ReadFull(local_con, data_b)
+	data := make([]byte, binary.BigEndian.Uint32(length), binary.BigEndian.Uint32(length))
+	_, err = io.ReadFull(local_con, data)
 	if err != nil {
 		slog.Logger.Error(err)
 		return
 	}
 
 	p := proto.Proto{}
-	p.Unmarshal(data_b, lc.crypto_handler)
+	p.Unmarshal(data, lc.crypto_handler)
 
-	if !strings.HasPrefix(string(p.Body), "gonat_port:") {
-		slog.Logger.Info("the ip client is not gonat client ", local_con.RemoteAddr())
+	if !sign.Verifi(p.Body) || len(p.Body) != 8 { // uint32 + 8 sign bit
+		slog.Logger.Info("a bad message : ", local_con.RemoteAddr())
 		return
 	}
 
-	port_b := p.Body[len([]byte("gonat_port:")):]
-
-	port := binary.BigEndian.Uint32(port_b)
+	port := binary.BigEndian.Uint32(p.Body[4:])
 
 	listen, err := net.Listen("tcp", ":"+strconv.Itoa(int(port)))
 	if err != nil {
