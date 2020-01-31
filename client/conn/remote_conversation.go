@@ -15,7 +15,7 @@ import (
 type remote_conversation struct {
 	crypto_handler          _interface.Safe
 	remote_conn             net.Conn
-	server_conversation_map map[uint32]_interface.Conversation
+	server_conversation_map map[uint32]_interface.Conversation // when keep long time gonat server conn this map  will leak memory
 	close_chan              chan struct{}
 	close_mu                sync.Mutex
 }
@@ -121,6 +121,9 @@ func (rc *remote_conversation) Monitor() {
 
 			case proto.TCP_PORT_BIND_ERROR:
 				slog.Logger.Info("remote port already bound please replace remote_port value")
+
+			case proto.TCP_CLOSE_CONN:
+				rc.server_conversation_map[p.ConversationID].Close()
 
 			}
 		}

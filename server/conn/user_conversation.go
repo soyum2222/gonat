@@ -46,7 +46,7 @@ func (u *user_conversation) Monitor() {
 				_, err := u.local.local_conn.Write(data)
 				if err != nil {
 					slog.Logger.Error(err)
-					u.local.Close()
+					//u.local.Close()
 				}
 				u.Close()
 
