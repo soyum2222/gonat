@@ -15,7 +15,7 @@ import (
 type remote_conversation struct {
 	crypto_handler          _interface.Safe
 	remote_conn             net.Conn
-	server_conversation_map map[uint32]_interface.Conversation
+	server_conversation_map map[uint32]_interface.Conversation // when keep long time gonat server conn this map  will leak memory
 	close_chan              chan struct{}
 	close_mu                sync.Mutex
 }
