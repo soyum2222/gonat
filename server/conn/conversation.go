@@ -150,7 +150,13 @@ func start_conversation(local_con net.Conn) {
 	}
 
 	//signature verification
-	if binary.BigEndian.Uint32(length) > 0xff { //0xff is a casual value just dont want length is to long
+	ml := len((&proto.Proto{
+		Kind:           proto.TCP_SEND_PROTO,
+		ConversationID: 0,
+		Body:           sign.Signature([]byte{0xff, 0xff, 0xff, 0xff}),
+	}).Marshal(lc.crypto_handler))
+
+	if binary.BigEndian.Uint32(length) > uint32(ml) {
 		slog.Logger.Info("message is too long : ", local_con.RemoteAddr())
 		return
 	}
@@ -165,7 +171,7 @@ func start_conversation(local_con net.Conn) {
 	p := proto.Proto{}
 	p.Unmarshal(data, lc.crypto_handler)
 
-	if !sign.Verifi(p.Body) || len(p.Body) != 8 { // uint32 + 8 sign bit
+	if !sign.Verifi(p.Body) || len(p.Body) != 8 { // one uint32 (port number) + 8 sign bit
 		slog.Logger.Info("a bad message : ", local_con.RemoteAddr())
 		return
 	}
