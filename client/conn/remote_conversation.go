@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"github.com/soyum2222/slog"
 	"gonat/client/config"
+	"gonat/common"
 	"gonat/interface"
 	"gonat/proto"
 	"io"
@@ -15,7 +16,7 @@ import (
 type remote_conversation struct {
 	crypto_handler          _interface.Safe
 	remote_conn             net.Conn
-	server_conversation_map map[uint32]_interface.Conversation // when keep long time gonat server conn this map  will leak memory
+	server_conversation_map common.ConversationTable // when keep long time gonat server conn this map  will leak memory
 	close_chan              chan struct{}
 	close_mu                sync.Mutex
 }
@@ -103,13 +104,17 @@ func (rc *remote_conversation) Monitor() {
 				sc.id = p.ConversationID
 				sc.crypto_handler = rc.crypto_handler
 				go sc.Monitor()
-				rc.server_conversation_map[p.ConversationID] = &sc
+				rc.server_conversation_map.Store(p.ConversationID, &sc)
 
 			case proto.TCP_COMM:
-				err := rc.server_conversation_map[p.ConversationID].Send(p.Body)
+				// to server conversation
+				scc, _ := rc.server_conversation_map.Load(p.ConversationID)
+				err = scc.Send(p.Body)
+				//err := rc.server_conversation_map[p.ConversationID].Send(p.Body)
 				if err != nil {
 					slog.Logger.Error(err)
-					rc.server_conversation_map[p.ConversationID].Close()
+					scc.Close()
+					//rc.server_conversation_map[p.ConversationID].Close()
 					continue
 				}
 
@@ -123,8 +128,9 @@ func (rc *remote_conversation) Monitor() {
 				slog.Logger.Info("remote port already bound please replace remote_port value")
 
 			case proto.TCP_CLOSE_CONN:
-				rc.server_conversation_map[p.ConversationID].Close()
-
+				scc, _ := rc.server_conversation_map.Load(p.ConversationID)
+				scc.Close()
+				//rc.server_conversation_map[p.ConversationID].Close()
 			}
 		}
 
@@ -133,9 +139,13 @@ func (rc *remote_conversation) Monitor() {
 }
 
 func (rc *remote_conversation) Close() {
-	for _, v := range rc.server_conversation_map {
-		v.Close()
-	}
+	//for _, v := range rc.server_conversation_map {
+	//	v.Close()
+	//}
+	rc.server_conversation_map.Range(func(key uint32, value _interface.Conversation) {
+		value.Close()
+	})
+
 	rc.close_mu.Lock()
 	defer rc.close_mu.Unlock()
 	rc.remote_conn.Close()

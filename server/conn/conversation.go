@@ -3,6 +3,7 @@ package conn
 import (
 	"encoding/binary"
 	"github.com/soyum2222/slog"
+	"gonat/common"
 	"gonat/interface"
 	"gonat/proto"
 	"gonat/safe"
@@ -17,7 +18,7 @@ import (
 type local_conversation struct {
 	//map_mutex             sync.RWMutex
 	//user_conversation_map map[uint32]_interface.Conversation //a user conn closed I didnt delete it,because I dont know how to do well . And I dont want use sync.Map :)
-	user           userTable
+	user           common.ConversationTable
 	user_listener  net.Listener
 	local_conn     net.Conn
 	close_chan     chan struct{}
