@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"github.com/soyum2222/slog"
