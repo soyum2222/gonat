@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+var GuiConfigPath string
 var CFG config
 
 type config struct {
@@ -33,6 +34,11 @@ func Load() {
 	log_path := flag.String("log_path", "", "log file path")
 
 	flag.Parse()
+
+	if GuiConfigPath != "" {
+		*c = GuiConfigPath
+	}
+
 	cfg := config{}
 	if *c != "" {
 		file, err := os.Open(*c)
@@ -61,4 +67,27 @@ func Load() {
 	}
 
 	CFG = cfg
+}
+func GuiLoad() {
+
+	flag.Parse()
+
+	if GuiConfigPath != "" {
+		file, err := os.Open(GuiConfigPath)
+		if err != nil {
+			return
+		}
+
+		b, err := ioutil.ReadAll(file)
+		if err != nil {
+			panic(err)
+		}
+		cfg := config{}
+		err = json.Unmarshal(b, &cfg)
+		if err != nil {
+			panic(err)
+		}
+
+		CFG = cfg
+	}
 }

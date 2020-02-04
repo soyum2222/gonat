@@ -1,7 +1,10 @@
 package conn
 
 import (
+	"context"
 	"encoding/binary"
+	"fyne.io/fyne"
+	"fyne.io/fyne/widget"
 	"github.com/soyum2222/slog"
 	"gonat/client/config"
 	"gonat/proto"
@@ -23,6 +26,50 @@ func Start() {
 
 		start_conversation(remote_conn)
 	}
+}
+
+func GuiStart(stop_signal context.Context, window fyne.Window) {
+
+	content := window.Content()
+	//box_v := *content.(*widget.Box).Children[0].(*widget.Form)
+
+	temp := make([]fyne.CanvasObject, len(content.(*widget.Box).Children))
+	copy(temp, content.(*widget.Box).Children)
+
+	defer func() {
+		content.(*widget.Box).Children[0] = temp[0]
+	}()
+	content.(*widget.Box).Children[0] = widget.NewLabelWithStyle("connecting...", fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
+
+label:
+	//fmt.Println(config.Remote_ip)
+	remote_conn, err := net.Dial("tcp", config.CFG.RemoteIp)
+	if err != nil {
+		slog.Logger.Error(err)
+		time.Sleep(5 * time.Second)
+
+		select {
+		case <-stop_signal.Done():
+			remote_conn.Close()
+		default:
+			goto label
+		}
+	}
+	content.(*widget.Box).Children[0] = widget.NewLabelWithStyle("connection succeeded", fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		select {
+		case <-ctx.Done():
+			return
+		case <-stop_signal.Done():
+			remote_conn.Close()
+			return
+		}
+	}()
+	start_conversation(remote_conn)
+	cancel()
+
 }
 
 func start_conversation(remote_conn net.Conn) {
