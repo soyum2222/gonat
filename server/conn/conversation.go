@@ -134,7 +134,16 @@ func (lc *local_conversation) Close() {
 	if err != nil {
 		slog.Logger.Error("close user_listener error ", err, " listener info :", lc.user_listener.Addr())
 	}
-	close(lc.close_chan)
+
+	select {
+	case _, ok := <-lc.close_chan:
+		if !ok {
+			break
+		}
+	default:
+		close(lc.close_chan)
+	}
+
 	lc.local_conn.Close()
 }
 
