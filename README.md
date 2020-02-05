@@ -56,5 +56,7 @@ this config map IP 127.0.0.1:8080 to IP 192.168.0.2:8081
 
 
 ---
-If your use gonat client in windows desktop, recommend you use https://github.com/soyum2222/gonat_client_gui
+ ̶I̶f̶ ̶y̶o̶u̶r̶ ̶u̶s̶e̶ ̶g̶o̶n̶a̶t̶ ̶c̶l̶i̶e̶n̶t̶ ̶i̶n̶ ̶w̶i̶n̶d̶o̶w̶s̶ ̶d̶e̶s̶k̶t̶o̶p̶,̶ ̶r̶e̶c̶o̶m̶m̶e̶n̶d̶ ̶y̶o̶u̶ ̶u̶s̶e̶ ̶h̶t̶t̶p̶s̶:̶/̶/̶g̶i̶t̶h̶u̶b̶.̶c̶o̶m̶/̶s̶o̶y̶u̶m̶2̶2̶2̶2̶/̶g̶o̶n̶a̶t̶_̶c̶l̶i̶e̶n̶t̶_̶g̶u̶i̶
+ Now the gonat client GUI has been migrated to this project
+
 
