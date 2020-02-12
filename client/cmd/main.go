@@ -13,12 +13,13 @@ func main() {
 
 	config.Load()
 	var err error
-	err = slog.DefaultNew(func() slog.SLogConfig {
-		cfg := slog.TestSLogConfig()
-		cfg.Debug = config.CFG.Debug
-		cfg.LogPath = config.CFG.LogPath
-		return cfg
-	})
+
+	cfg := slog.TestSLogConfig()
+	cfg.Debug = config.CFG.Debug
+	cfg.LogPath = config.CFG.LogPath
+	cfg.LogFileName = "gonat"
+
+	err = slog.DefaultNew(cfg)
 	if err != nil {
 		panic(err)
 	}
@@ -30,7 +31,7 @@ func main() {
 	}()
 
 	if config.CFG.Debug {
-		go http.ListenAndServe(":8808", nil)
+		go http.ListenAndServe(config.CFG.PprofAddr, nil)
 	}
 
 	conn.Start()

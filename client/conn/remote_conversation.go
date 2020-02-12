@@ -88,7 +88,7 @@ func (rc *remote_conversation) Monitor() {
 			switch p.Kind {
 
 			case proto.TCP_CREATE_CONN:
-				server_con, err := net.Dial("tcp", config.CFG.ServerIp)
+				server_con, err := net.Dial("tcp", config.CFG.ProxiedAddr)
 				if err != nil {
 					slog.Logger.Error(err)
 					p.Kind = proto.TCP_DIAL_ERROR
@@ -122,7 +122,7 @@ func (rc *remote_conversation) Monitor() {
 				slog.Logger.Debug("send server :", string(p.Body))
 
 			case proto.TCP_SEND_PROTO:
-				slog.Logger.Info("remote port :", string(p.Body))
+				slog.Logger.Info("destination port :", string(p.Body))
 
 			case proto.TCP_PORT_BIND_ERROR:
 				slog.Logger.Info("remote port already bound please replace remote_port value")

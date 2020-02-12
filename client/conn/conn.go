@@ -17,7 +17,11 @@ import (
 func Start() {
 
 	for {
-		remote_conn, err := net.Dial("tcp", config.CFG.RemoteIp)
+
+		slog.Logger.Info("creating connection...")
+		slog.Logger.Info("gonat remote address is : ", config.CFG.RemoteAddr)
+
+		remote_conn, err := net.Dial("tcp", config.CFG.RemoteAddr)
 		if err != nil {
 			slog.Logger.Error(err)
 			time.Sleep(5 * time.Second)
@@ -43,7 +47,7 @@ func GuiStart(stop_signal context.Context, window fyne.Window) {
 
 label:
 	//fmt.Println(config.Remote_ip)
-	remote_conn, err := net.Dial("tcp", config.CFG.RemoteIp)
+	remote_conn, err := net.Dial("tcp", config.CFG.RemoteAddr)
 	if err != nil {
 		slog.Logger.Error(err)
 		time.Sleep(5 * time.Second)
@@ -82,7 +86,7 @@ func start_conversation(remote_conn net.Conn) {
 
 	port := make([]byte, 4, 4)
 
-	binary.BigEndian.PutUint32(port, uint32(config.CFG.RemotePort))
+	binary.BigEndian.PutUint32(port, uint32(config.CFG.DestPort))
 
 	p := proto.Proto{
 		Kind:           proto.TCP_SEND_PROTO,
@@ -94,6 +98,8 @@ func start_conversation(remote_conn net.Conn) {
 		slog.Logger.Error(err)
 		return
 	}
+
+	slog.Logger.Info("connection established successfully")
 
 	go rc.Heartbeat()
 	rc.Monitor()

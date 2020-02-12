@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 )
@@ -15,18 +16,33 @@ type config struct {
 	Crypt    string `json:"crypt"`
 	CryptKey string `json:"crypt_key"`
 	LogPath  string `json:"log_path"`
+	PPROF    string `json:"pprof"`
 }
 
 func Load() {
 
-	client_port := flag.Int("client_port", 0, "")
+	p := flag.Int("p", 0, "")
 	debug := flag.Bool("debug", false, "")
 	c := flag.String("c", "", "config file")
-	crypt := flag.String("crypt", "", "crypt type")
-	crypt_key := flag.String("crypt_key", "", "crypt key")
-	log_path := flag.String("log_path", "", "log file path")
+	crypt := flag.String("ct", "", "crypt type")
+	crypt_key := flag.String("k", "", "crypt key")
+	log_path := flag.String("lp", "", "log file path")
+	help := flag.Bool("help", false, "")
 
 	flag.Parse()
+
+	if *help {
+
+		fmt.Println("-p		listen port")
+		fmt.Println("-debug	open or close debug mode")
+		fmt.Println("-c		config file path")
+		fmt.Println("-ct	crypt type now support aes-128-cbc")
+		fmt.Println("-k		crypt password")
+		fmt.Println("-lp	log file path if this value is null, no log file is create")
+		fmt.Println("-pprof	when open debug mode, set pporf address eg:  127.0.0.1:8080")
+
+		os.Exit(0)
+	}
 
 	cfg := config{}
 	if *c != "" {
@@ -46,7 +62,7 @@ func Load() {
 
 	} else {
 
-		cfg.Port = *client_port
+		cfg.Port = *p
 		cfg.Debug = *debug
 		cfg.CryptKey = *crypt_key
 		cfg.Crypt = *crypt

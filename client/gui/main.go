@@ -13,13 +13,13 @@ import (
 )
 
 var (
-	server_ip   *widget.Entry
-	remote_ip   *widget.Entry
-	remote_port *widget.Entry
-	crypt       *widget.Select
-	crypt_key   *widget.Entry
-	w           fyne.Window
-	start       *widget.Button
+	remote_addr  *widget.Entry
+	porxied_addr *widget.Entry
+	dest_port    *widget.Entry
+	crypt        *widget.Select
+	crypt_key    *widget.Entry
+	w            fyne.Window
+	start        *widget.Button
 )
 
 func main() {
@@ -32,29 +32,29 @@ func main() {
 
 	w = app.NewWindow("GoNat")
 
-	server_ip = widget.NewEntry()
-	remote_ip = widget.NewEntry()
-	remote_port = widget.NewEntry()
+	remote_addr = widget.NewEntry()
+	porxied_addr = widget.NewEntry()
+	dest_port = widget.NewEntry()
 	crypt = widget.NewSelect([]string{"aes-128-cbc"}, nil)
 	crypt_key = widget.NewPasswordEntry()
 
-	server_ip.SetText(config.CFG.ServerIp)
-	remote_ip.SetText(config.CFG.RemoteIp)
-	remote_port.SetText(strconv.Itoa(config.CFG.RemotePort))
+	remote_addr.SetText(config.CFG.RemoteAddr)
+	porxied_addr.SetText(config.CFG.ProxiedAddr)
+	dest_port.SetText(strconv.Itoa(config.CFG.DestPort))
 	crypt.SetSelected(config.CFG.Crypt)
 	crypt_key.SetText(config.CFG.CryptKey)
 
-	start = widget.NewButton("Star", Strat)
+	start = widget.NewButton("Start", Strat)
 
 	w.SetMainMenu(fyne.NewMainMenu(fyne.NewMenu("File",
-		fyne.NewMenuItem("Star", Strat),
+		fyne.NewMenuItem("Start", Strat),
 	)))
 
 	form := &widget.Form{}
 
-	form.Append("server_ip", server_ip)
-	form.Append("remote_ip", remote_ip)
-	form.Append("remote_port", remote_port)
+	form.Append("remote_addr", remote_addr)
+	form.Append("porxied_addr", porxied_addr)
+	form.Append("dest_port", dest_port)
 	form.Append("crypt", crypt)
 	form.Append("crypt_key", crypt_key)
 
@@ -76,22 +76,27 @@ func main() {
 
 func Strat() {
 
-	config.CFG.RemotePort, _ = strconv.Atoi(remote_ip.Text)
+	config.CFG.RemoteAddr = remote_addr.Text
+
+	config.CFG.DestPort, _ = strconv.Atoi(dest_port.Text)
+
 	config.CFG.CryptKey = crypt_key.Text
-	config.CFG.ServerIp = server_ip.Text
+
+	config.CFG.ProxiedAddr = porxied_addr.Text
+
 	config.CFG.Crypt = crypt.Selected
-	port, err := strconv.Atoi(remote_port.Text)
+
+	port, err := strconv.Atoi(dest_port.Text)
 	if err != nil {
 		dialog.ShowError(err, w)
 		return
 	}
-	config.CFG.RemotePort = port
+	config.CFG.DestPort = port
 
-	err = slog.DefaultNew(func() slog.SLogConfig {
-		cfg := slog.TestSLogConfig()
-		cfg.Debug = config.CFG.Debug
-		return cfg
-	})
+	cfg := slog.TestSLogConfig()
+	cfg.Debug = config.CFG.Debug
+
+	err = slog.DefaultNew(cfg)
 
 	start.SetText("stop")
 

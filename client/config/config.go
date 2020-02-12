@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 )
@@ -11,32 +12,63 @@ var GuiConfigPath string
 var CFG config
 
 type config struct {
-	Debug      bool   `json:"debug"`
-	RemotePort int    `json:"remote_port"`
-	LogPath    string `json:"log_path"`
-	RemoteIp   string `json:"remote_ip"`
-	ServerIp   string `json:"server_ip"`
-	Crypt      string `json:"crypt"`
-	CryptKey   string `json:"crypt_key"`
+	Debug       bool   `json:"debug"`
+	DestPort    int    `json:"dest_port"`
+	LogPath     string `json:"log_path"`
+	RemoteAddr  string `json:"remote_addr"`
+	ProxiedAddr string `json:"proxied_addr"`
+	Crypt       string `json:"crypt"`
+	CryptKey    string `json:"crypt_key"`
+	PprofAddr   string `json:"pprof_addr"`
+}
+
+func PrintHelp() {
+
+	fmt.Println("-p         be proxied server address eg:  127.0.0.1:80")
+	fmt.Println("-r         gonat server address ")
+	fmt.Println("-dp        destination port this port will to gonat server listen")
+	fmt.Println("-debug     open or close debug mode")
+	fmt.Println("-c         config file path")
+	fmt.Println("-ct        crypt type now support aes-128-cbc")
+	fmt.Println("-k         crypt password")
+	fmt.Println("-lp        log file path if this value is null, no log file is create")
+	fmt.Println("-pprof     when open debug mode, set pporf address eg:  127.0.0.1:8080")
+
+	os.Exit(0)
 }
 
 func Load() {
 
-	server_ip := flag.String("server_ip", "127.0.0.1", "")
+	p := flag.String("p", "127.0.0.1:80", "be proxied server address eg:  127.0.0.1:80")
 
-	remote_ip := flag.String("remote_ip", "", "")
+	r := flag.String("r", "", "")
 
-	remote_l := flag.Int("remote_port", 0, "remote listen port")
+	dp := flag.Int("dp", 0, "remote listen port")
+
 	debug := flag.Bool("debug", false, "debug")
+
 	c := flag.String("c", "", "config file")
-	crypt := flag.String("crypt", "", "crypt type")
-	crypt_key := flag.String("crypt_key", "", "crypt key")
-	log_path := flag.String("log_path", "", "log file path")
+
+	crypt := flag.String("ct", "", "crypt type")
+
+	k := flag.String("k", "", "crypt key")
+
+	lp := flag.String("lp", "", "log file path")
+
+	help := flag.Bool("help", false, "help")
+
+	pprof := flag.String("pprof", "", "")
 
 	flag.Parse()
 
-	if GuiConfigPath != "" {
-		*c = GuiConfigPath
+	for _, v := range flag.Args() {
+		if v == "help" {
+			*help = true
+		}
+	}
+
+	if *help {
+		PrintHelp()
 	}
 
 	cfg := config{}
@@ -58,12 +90,13 @@ func Load() {
 
 	} else {
 		cfg.Crypt = *crypt
-		cfg.ServerIp = *server_ip
-		cfg.RemoteIp = *remote_ip
-		cfg.RemotePort = *remote_l
+		cfg.ProxiedAddr = *p
+		cfg.RemoteAddr = *r
+		cfg.DestPort = *dp
 		cfg.Debug = *debug
-		cfg.CryptKey = *crypt_key
-		cfg.LogPath = *log_path
+		cfg.CryptKey = *k
+		cfg.LogPath = *lp
+		cfg.PprofAddr = *pprof
 	}
 
 	CFG = cfg
