@@ -2,7 +2,7 @@
 Port Mapping
 
 ## What done
-proxy the port to anther network
+proxy the port to other network
 
 ## Supports protocol
 TCP
