@@ -118,8 +118,8 @@ func (rc *remote_conversation) Monitor() {
 					continue
 				}
 
-				slog.Logger.Debug("send server len:", len(p.Body))
-				slog.Logger.Debug("send server :", string(p.Body))
+				//slog.Logger.Debug("send server len:", len(p.Body))
+				//slog.Logger.Debug("send server :", string(p.Body))
 
 			case proto.TCP_SEND_PROTO:
 				slog.Logger.Info("destination port :", string(p.Body))

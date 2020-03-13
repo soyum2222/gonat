@@ -199,6 +199,9 @@ func start_conversation(local_con net.Conn) {
 
 	addr := listen.Addr().String()
 
+	// record
+	ClientTabel.Store(addr, strconv.Itoa(int(port)))
+
 	p = proto.Proto{proto.TCP_SEND_PROTO, 0, []byte(addr)}
 	_, err = local_con.Write(p.Marshal(lc.crypto_handler))
 	if err != nil {
@@ -234,6 +237,7 @@ func start_conversation(local_con net.Conn) {
 				slog.Logger.Error(err)
 				return
 			}
+
 			uc := user_conversation{}
 			uc.local = &lc
 			uc.close_chan = make(chan struct{}, 1)
@@ -241,6 +245,10 @@ func start_conversation(local_con net.Conn) {
 			uc.user_conn = user_con
 			uc.crypto_handler = lc.crypto_handler
 			lc.user.Store(uc.id, &uc)
+
+			// recode
+			UserTable.Store(user_con.RemoteAddr().String(), user_con.LocalAddr().String())
+
 			go uc.Monitor()
 
 		}

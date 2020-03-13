@@ -17,6 +17,7 @@ type config struct {
 	CryptKey string `json:"crypt_key"`
 	LogPath  string `json:"log_path"`
 	PPROF    string `json:"pprof"`
+	UIP      string `json:"uip"`
 }
 
 func Load() {
@@ -28,6 +29,7 @@ func Load() {
 	crypt_key := flag.String("k", "", "crypt key")
 	log_path := flag.String("lp", "", "log file path")
 	help := flag.Bool("help", false, "")
+	uip := flag.String("uip", "", "")
 
 	flag.Parse()
 
@@ -67,6 +69,7 @@ func Load() {
 		cfg.CryptKey = *crypt_key
 		cfg.Crypt = *crypt
 		cfg.LogPath = *log_path
+		cfg.UIP = *uip
 
 	}
 

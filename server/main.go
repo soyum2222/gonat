@@ -5,6 +5,7 @@ import (
 	"github.com/soyum2222/slog"
 	"gonat/server/config"
 	"gonat/server/conn"
+	"gonat/server/web"
 	"net/http"
 	_ "net/http/pprof"
 	"runtime/debug"
@@ -35,7 +36,9 @@ func main() {
 			slog.Logger.Panic(string(debug.Stack()), err)
 		}
 	}()
+
 	fmt.Println("log create success")
+	web.Run()
 
 	conn.Start(strconv.Itoa(config.CFG.Port))
 }

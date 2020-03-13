@@ -3,7 +3,11 @@ package conn
 import (
 	"github.com/soyum2222/slog"
 	"net"
+	"sync"
 )
+
+var ClientTabel sync.Map
+var UserTable sync.Map
 
 func Start(port string) {
 
