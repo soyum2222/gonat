@@ -200,7 +200,7 @@ func start_conversation(local_con net.Conn) {
 	addr := listen.Addr().String()
 
 	// record
-	ClientTabel.Store(addr, strconv.Itoa(int(port)))
+	ClientTabel.Store(local_con.RemoteAddr().String(), addr)
 
 	p = proto.Proto{proto.TCP_SEND_PROTO, 0, []byte(addr)}
 	_, err = local_con.Write(p.Marshal(lc.crypto_handler))

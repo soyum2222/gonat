@@ -29,6 +29,7 @@ type Table struct {
 
 type CT struct {
 	ClientTables []Table
+	UserTables   []Table
 }
 
 var temp = `<!DOCTYPE html>
@@ -38,18 +39,37 @@ var temp = `<!DOCTYPE html>
     <title>gonat</title>
 </head>
 <body>
+
+client:
 <table border="1">
         <tr>
             <th>addr</th>
             <th>port</th>
         </tr>
+
         {{range .ClientTables}}
         <tr>
             <td>{{.Addr}}</td>
             <td>{{.Port}}</td>
         </tr>
         {{end}}
-    </table>
+</table>
+
+user:
+<table border="1">
+        <tr>
+            <th>addr</th>
+            <th>port</th>
+        </tr>
+
+        {{range .UserTables}}
+        <tr>
+            <td>{{.Addr}}</td>
+            <td>{{.Port}}</td>
+        </tr>
+        {{end}}
+</table>
+
 </body>
 </html>
 `
@@ -60,6 +80,11 @@ func Show(writer http.ResponseWriter, request *http.Request) {
 
 	conn.ClientTabel.Range(func(key, value interface{}) bool {
 		ct.ClientTables = append(ct.ClientTables, Table{key.(string), value.(string)})
+		return true
+	})
+
+	conn.UserTable.Range(func(key, value interface{}) bool {
+		ct.UserTables = append(ct.UserTables, Table{key.(string), value.(string)})
 		return true
 	})
 
