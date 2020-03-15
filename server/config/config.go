@@ -57,6 +57,10 @@ func Load() {
 		if err != nil {
 			panic(err)
 		}
+
+		fmt.Println("config ----")
+		fmt.Println(string(b))
+
 		err = json.Unmarshal(b, &cfg)
 		if err != nil {
 			panic(err)

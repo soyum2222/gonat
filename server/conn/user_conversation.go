@@ -85,6 +85,7 @@ func (u *user_conversation) Close() {
 	u.user_conn.Close()
 	u.local.user.Delete(u.id)
 
+	UserTable.Delete(u.user_conn.RemoteAddr().String())
 	select {
 	case _, ok := <-u.close_chan:
 		if !ok {

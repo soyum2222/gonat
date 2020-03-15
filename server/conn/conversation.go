@@ -130,6 +130,8 @@ func (lc *local_conversation) Close() {
 		value.Close()
 	})
 
+	ClientTabel.Delete(lc.local_conn.RemoteAddr().String())
+
 	err := lc.user_listener.Close()
 	if err != nil {
 		slog.Logger.Error("close user_listener error ", err, " listener info :", lc.user_listener.Addr())
