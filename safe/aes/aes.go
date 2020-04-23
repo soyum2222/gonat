@@ -5,6 +5,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/md5"
+	"github.com/soyum2222/slog"
 )
 
 type AesCbc struct {
@@ -18,6 +19,12 @@ func (a *AesCbc) Encrypt(src []byte) ([]byte, error) {
 }
 
 func (a *AesCbc) Decrypt(src []byte) ([]byte, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			slog.Logger.Error("aes decrypt error ", err, "src is ", string(src), "key is ", a.Key)
+
+		}
+	}()
 	key := evpBytesToKey(a.Key, a.Ken_len)
 	return decryptAES(src, key)
 }
