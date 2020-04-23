@@ -18,6 +18,12 @@ func Start(port string) {
 	}
 
 	for {
+		defer func() {
+			if err := recover(); err != nil {
+				slog.Logger.Error(err)
+			}
+		}()
+
 		local_con, err := l.Accept()
 		if err != nil {
 			panic(err)

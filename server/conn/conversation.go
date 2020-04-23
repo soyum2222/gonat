@@ -168,8 +168,8 @@ func start_conversation(local_con net.Conn) {
 		Body:           sign.Signature([]byte{0xff, 0xff, 0xff, 0xff}),
 	}).Marshal(lc.crypto_handler))
 
-	if binary.BigEndian.Uint32(length) > uint32(ml) {
-		slog.Logger.Info("message is too long : ", local_con.RemoteAddr())
+	if binary.BigEndian.Uint32(length) != uint32(ml)-4 {
+		slog.Logger.Info("a bad message : ", local_con.RemoteAddr())
 		return
 	}
 
