@@ -18,7 +18,7 @@ https://github.com/soyum2222/gonat/releases
 ` ./gonat_client -c config `  
 
 ### Start parameters
-`You can try run ./gonat -help get start param help`
+You can try run `./gonat help` get start param help
 
 ## About config.json
 #### Server
