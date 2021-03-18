@@ -8,20 +8,20 @@ import (
 	"sync"
 )
 
-type server_conversation struct {
-	id             uint32
-	remote_conn    net.Conn
-	server_conn    net.Conn
-	close_mu       sync.Mutex
-	close_chan     chan struct{}
-	crypto_handler _interface.Safe
+type serverConversation struct {
+	id            uint32
+	remoteConn    net.Conn
+	serverConn    net.Conn
+	closeMu       sync.Mutex
+	closeChan     chan struct{}
+	cryptoHandler _interface.Safe
 }
 
-func (sc *server_conversation) Heartbeat() {
+func (sc *serverConversation) Heartbeat() {
 	//panic("implement me")
 }
 
-func (sc *server_conversation) Monitor() {
+func (sc *serverConversation) Monitor() {
 
 	data := make([]byte, 1024, 1024)
 
@@ -29,19 +29,19 @@ func (sc *server_conversation) Monitor() {
 
 		select {
 
-		case <-sc.close_chan:
+		case <-sc.closeChan:
 			return
 
 		default:
 
-			n, err := sc.server_conn.Read(data)
+			n, err := sc.serverConn.Read(data)
 			if err != nil {
 
-				p := proto.Proto{proto.TCP_CLOSE_CONN, sc.id, nil}
-				_, err := sc.remote_conn.Write(p.Marshal(sc.crypto_handler))
+				p := proto.Proto{Kind: proto.TCP_CLOSE_CONN, ConversationID: sc.id}
+				_, err := sc.remoteConn.Write(p.Marshal(sc.cryptoHandler))
 				if err != nil {
 					slog.Logger.Error(err)
-					sc.remote_conn.Close()
+					sc.remoteConn.Close()
 				}
 
 				sc.Close()
@@ -51,8 +51,8 @@ func (sc *server_conversation) Monitor() {
 			slog.Logger.Debug("server receive : ", string(data))
 			slog.Logger.Debug("server receive len : ", n)
 
-			p := proto.Proto{proto.TCP_COMM, sc.id, data[0:n]}
-			_, err = sc.remote_conn.Write(p.Marshal(sc.crypto_handler))
+			p := proto.Proto{Kind: proto.TCP_COMM, ConversationID: sc.id, Body: data[0:n]}
+			_, err = sc.remoteConn.Write(p.Marshal(sc.cryptoHandler))
 			if err != nil {
 				slog.Logger.Error(err)
 				sc.Close()
@@ -65,23 +65,23 @@ func (sc *server_conversation) Monitor() {
 
 }
 
-func (sc *server_conversation) Close() {
-	sc.server_conn.Close()
+func (sc *serverConversation) Close() {
+	sc.serverConn.Close()
 
-	sc.close_mu.Lock()
-	defer sc.close_mu.Unlock()
+	sc.closeMu.Lock()
+	defer sc.closeMu.Unlock()
 	select {
-	case _, ok := <-sc.close_chan:
+	case _, ok := <-sc.closeChan:
 		if !ok {
 			return
 		}
 	default:
-		close(sc.close_chan)
+		close(sc.closeChan)
 
 	}
 }
 
-func (sc *server_conversation) Send(b []byte) error {
-	_, err := sc.server_conn.Write(b)
+func (sc *serverConversation) Send(b []byte) error {
+	_, err := sc.serverConn.Write(b)
 	return err
 }

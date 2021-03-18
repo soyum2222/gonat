@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-var ClientTabel sync.Map
+var ClientTable sync.Map
 var UserTable sync.Map
 
 func Start(port string) {
@@ -28,7 +28,7 @@ func Start(port string) {
 		if err != nil {
 			panic(err)
 		}
-		go start_conversation(local_con)
+		go startConversation(local_con)
 	}
 
 }

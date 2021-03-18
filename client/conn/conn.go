@@ -21,18 +21,18 @@ func Start() {
 		slog.Logger.Info("creating connection...")
 		slog.Logger.Info("gonat remote address is : ", config.CFG.RemoteAddr)
 
-		remote_conn, err := net.Dial("tcp", config.CFG.RemoteAddr)
+		remoteConn, err := net.Dial("tcp", config.CFG.RemoteAddr)
 		if err != nil {
 			slog.Logger.Error(err)
 			time.Sleep(5 * time.Second)
 			continue
 		}
 
-		start_conversation(remote_conn)
+		startConversation(remoteConn)
 	}
 }
 
-func GuiStart(stop_signal context.Context, window fyne.Window) {
+func GuiStart(stopSignal context.Context, window fyne.Window) {
 
 	content := window.Content()
 	//box_v := *content.(*widget.Box).Children[0].(*widget.Form)
@@ -47,14 +47,14 @@ func GuiStart(stop_signal context.Context, window fyne.Window) {
 
 label:
 	//fmt.Println(config.Remote_ip)
-	remote_conn, err := net.Dial("tcp", config.CFG.RemoteAddr)
+	remoteConn, err := net.Dial("tcp", config.CFG.RemoteAddr)
 	if err != nil {
 		slog.Logger.Error(err)
 		time.Sleep(5 * time.Second)
 
 		select {
-		case <-stop_signal.Done():
-			remote_conn.Close()
+		case <-stopSignal.Done():
+			remoteConn.Close()
 		default:
 			goto label
 		}
@@ -66,23 +66,23 @@ label:
 		select {
 		case <-ctx.Done():
 			return
-		case <-stop_signal.Done():
-			remote_conn.Close()
+		case <-stopSignal.Done():
+			remoteConn.Close()
 			return
 		}
 	}()
-	start_conversation(remote_conn)
+	startConversation(remoteConn)
 	cancel()
 
 }
 
-func start_conversation(remote_conn net.Conn) {
+func startConversation(remoteConn net.Conn) {
 
-	rc := remote_conversation{}
-	rc.close_chan = make(chan struct{}, 1)
-	rc.remote_conn = remote_conn
-	rc.server_conversation_map.Init()
-	rc.crypto_handler = safe.GetSafe(config.CFG.Crypt, config.CFG.CryptKey)
+	rc := remoteConversation{}
+	rc.closeChan = make(chan struct{}, 1)
+	rc.remoteConn = remoteConn
+	rc.serverConversationMap.Init()
+	rc.cryptoHandler = safe.GetSafe(config.CFG.Crypt, config.CFG.CryptKey)
 
 	port := make([]byte, 4, 4)
 
@@ -93,7 +93,7 @@ func start_conversation(remote_conn net.Conn) {
 		ConversationID: 0,
 		Body:           sign.Signature(port),
 	}
-	_, err := rc.remote_conn.Write(p.Marshal(rc.crypto_handler))
+	_, err := rc.remoteConn.Write(p.Marshal(rc.cryptoHandler))
 	if err != nil {
 		slog.Logger.Error(err)
 		return

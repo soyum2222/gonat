@@ -23,7 +23,7 @@ func Signature(b []byte) []byte {
 
 }
 
-func Verifi(b []byte) bool {
+func Verify(b []byte) bool {
 	if len(b) < 4 {
 		return false
 	}

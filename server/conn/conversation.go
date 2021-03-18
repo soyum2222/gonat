@@ -15,30 +15,30 @@ import (
 	"time"
 )
 
-type local_conversation struct {
+type localConversation struct {
 	//map_mutex             sync.RWMutex
 	//user_conversation_map map[uint32]_interface.Conversation //a user conn closed I didnt delete it,because I dont know how to do well . And I dont want use sync.Map :)
-	user           common.ConversationTable
-	user_listener  net.Listener
-	local_conn     net.Conn
-	close_chan     chan struct{}
-	crypto_handler _interface.Safe
-	timeout        *time.Timer
+	user          common.ConversationTable
+	userListener  net.Listener
+	localConn     net.Conn
+	closeChan     chan struct{}
+	cryptoHandler _interface.Safe
+	timeout       *time.Timer
 }
 
-func (lc *local_conversation) Heartbeat() {
+func (lc *localConversation) Heartbeat() {
 	panic("implement me")
 }
 
-func (lc *local_conversation) Send([]byte) error {
+func (lc *localConversation) Send([]byte) error {
 	panic("implement me")
 }
-func (lc *local_conversation) timeout_monitor() {
+func (lc *localConversation) timeoutMonitor() {
 
 	for {
 		select {
 		case <-lc.timeout.C:
-			slog.Logger.Info("user heartbeat timeout close the conn ", lc.local_conn.LocalAddr())
+			slog.Logger.Info("user heartbeat timeout close the conn ", lc.localConn.LocalAddr())
 			lc.Close()
 			return
 		}
@@ -46,7 +46,7 @@ func (lc *local_conversation) timeout_monitor() {
 }
 
 //communication to gonat client
-func (lc *local_conversation) Monitor() {
+func (lc *localConversation) Monitor() {
 	l := make([]byte, 4, 4)
 	p := proto.Proto{}
 
@@ -54,30 +54,30 @@ func (lc *local_conversation) Monitor() {
 	for {
 
 		select {
-		case <-lc.close_chan:
+		case <-lc.closeChan:
 			return
 		default:
-			_, err := io.ReadFull(lc.local_conn, l)
+			_, err := io.ReadFull(lc.localConn, l)
 
 			if err != nil {
-				slog.Logger.Error("local conn read error , conn info :", lc.local_conn.LocalAddr(), err)
+				slog.Logger.Error("local conn read error , conn info :", lc.localConn.LocalAddr(), err)
 				lc.Close()
 				return
 			}
 
-			data_len := binary.BigEndian.Uint32(l)
+			dataLen := binary.BigEndian.Uint32(l)
 
-			data := make([]byte, data_len, data_len)
+			data := make([]byte, dataLen, dataLen)
 
-			_, err = io.ReadFull(lc.local_conn, data)
-			//_, err = lc.local_conn.Read(data)
+			_, err = io.ReadFull(lc.localConn, data)
+			//_, err = lc.localConn.Read(data)
 			if err != nil {
 				slog.Logger.Error(err)
 				lc.Close()
 				return
 			}
 
-			p.Unmarshal(data, lc.crypto_handler)
+			p.Unmarshal(data, lc.cryptoHandler)
 
 			if conv, ok := lc.user.Load(p.ConversationID); conv == nil || !ok {
 				continue
@@ -86,18 +86,18 @@ func (lc *local_conversation) Monitor() {
 			switch p.Kind {
 
 			case proto.TCP_CLOSE_CONN:
-				user_conn, _ := lc.user.Load(p.ConversationID)
-				user_conn.Close()
+				userConn, _ := lc.user.Load(p.ConversationID)
+				userConn.Close()
 				continue
 
 			case proto.TCP_DIAL_ERROR:
-				user_conn, _ := lc.user.Load(p.ConversationID)
-				user_conn.Close()
+				userConn, _ := lc.user.Load(p.ConversationID)
+				userConn.Close()
 				continue
 
 			case proto.TCP_COMM:
-				user_conn, _ := lc.user.Load(p.ConversationID)
-				err := user_conn.Send(p.Body)
+				userConn, _ := lc.user.Load(p.ConversationID)
+				err := userConn.Send(p.Body)
 				if err != nil {
 					//here no need return
 					slog.Logger.Error(err)
@@ -122,7 +122,7 @@ func (lc *local_conversation) Monitor() {
 	}
 }
 
-func (lc *local_conversation) Close() {
+func (lc *localConversation) Close() {
 	//for _, v := range lc.user_conversation_map {
 	//	v.Close()
 	//}
@@ -130,34 +130,34 @@ func (lc *local_conversation) Close() {
 		value.Close()
 	})
 
-	ClientTabel.Delete(lc.local_conn.RemoteAddr().String())
+	ClientTable.Delete(lc.localConn.RemoteAddr().String())
 
-	err := lc.user_listener.Close()
+	err := lc.userListener.Close()
 	if err != nil {
-		slog.Logger.Error("close user_listener error ", err, " listener info :", lc.user_listener.Addr())
+		slog.Logger.Error("close userListener error ", err, " listener info :", lc.userListener.Addr())
 	}
 
 	select {
-	case _, ok := <-lc.close_chan:
+	case _, ok := <-lc.closeChan:
 		if !ok {
 			break
 		}
 	default:
-		close(lc.close_chan)
+		close(lc.closeChan)
 	}
 
-	lc.local_conn.Close()
+	lc.localConn.Close()
 }
 
-func start_conversation(local_con net.Conn) {
+func startConversation(localCon net.Conn) {
 
-	lc := local_conversation{}
-	lc.crypto_handler = safe.GetSafe(config.CFG.Crypt, config.CFG.CryptKey)
+	lc := localConversation{}
+	lc.cryptoHandler = safe.GetSafe(config.CFG.Crypt, config.CFG.CryptKey)
 
 	length := make([]byte, 4, 4)
-	_, err := io.ReadFull(local_con, length)
+	_, err := io.ReadFull(localCon, length)
 	if err != nil {
-		slog.Logger.Error("local conn read error , conn info : ", local_con.LocalAddr(), err)
+		slog.Logger.Error("local conn read error , conn info : ", localCon.LocalAddr(), err)
 		return
 	}
 
@@ -166,25 +166,25 @@ func start_conversation(local_con net.Conn) {
 		Kind:           proto.TCP_SEND_PROTO,
 		ConversationID: 0,
 		Body:           sign.Signature([]byte{0xff, 0xff, 0xff, 0xff}),
-	}).Marshal(lc.crypto_handler))
+	}).Marshal(lc.cryptoHandler))
 
 	if binary.BigEndian.Uint32(length) != uint32(ml)-4 {
-		slog.Logger.Info("a bad message : ", local_con.RemoteAddr())
+		slog.Logger.Info("a bad message : ", localCon.RemoteAddr())
 		return
 	}
 
 	data := make([]byte, binary.BigEndian.Uint32(length), binary.BigEndian.Uint32(length))
-	_, err = io.ReadFull(local_con, data)
+	_, err = io.ReadFull(localCon, data)
 	if err != nil {
 		slog.Logger.Error(err)
 		return
 	}
 
 	p := proto.Proto{}
-	p.Unmarshal(data, lc.crypto_handler)
+	p.Unmarshal(data, lc.cryptoHandler)
 
-	if !sign.Verifi(p.Body) || len(p.Body) != 8 { // one uint32 (port number) + 8 sign bit
-		slog.Logger.Info("a bad message : ", local_con.RemoteAddr())
+	if !sign.Verify(p.Body) || len(p.Body) != 8 { // one uint32 (port number) + 8 sign bit
+		slog.Logger.Info("a bad message : ", localCon.RemoteAddr())
 		return
 	}
 
@@ -193,49 +193,49 @@ func start_conversation(local_con net.Conn) {
 	listen, err := net.Listen("tcp", ":"+strconv.Itoa(int(port)))
 	if err != nil {
 		p := proto.Proto{Kind: proto.TCP_PORT_BIND_ERROR}
-		_, _ = local_con.Write(p.Marshal(lc.crypto_handler))
+		_, _ = localCon.Write(p.Marshal(lc.cryptoHandler))
 		slog.Logger.Error(err)
-		_ = local_con.Close()
+		_ = localCon.Close()
 		return
 	}
 
 	addr := listen.Addr().String()
 
 	// record
-	ClientTabel.Store(local_con.RemoteAddr().String(), addr)
+	ClientTable.Store(localCon.RemoteAddr().String(), addr)
 
-	p = proto.Proto{proto.TCP_SEND_PROTO, 0, []byte(addr)}
-	_, err = local_con.Write(p.Marshal(lc.crypto_handler))
+	p = proto.Proto{Kind: proto.TCP_SEND_PROTO, Body: []byte(addr)}
+	_, err = localCon.Write(p.Marshal(lc.cryptoHandler))
 	if err != nil {
-		_ = local_con.Close()
+		_ = localCon.Close()
 		return
 	}
 
-	lc.local_conn = local_con
-	lc.close_chan = make(chan struct{}, 1)
+	lc.localConn = localCon
+	lc.closeChan = make(chan struct{}, 1)
 	lc.user.Init()
-	lc.user_listener = listen
+	lc.userListener = listen
 
 	go lc.Monitor()
 
-	for conversation_id := 0; ; conversation_id++ {
+	for conversationId := 0; ; conversationId++ {
 
 		select {
 
-		case <-lc.close_chan:
+		case <-lc.closeChan:
 			return
 
 		default:
-			user_con, err := listen.Accept()
+			userCon, err := listen.Accept()
 			if err != nil {
 				slog.Logger.Error(err)
 				return
 			}
 
-			p := proto.Proto{proto.TCP_CREATE_CONN, uint32(conversation_id), nil}
-			_, err = lc.local_conn.Write(p.Marshal(lc.crypto_handler))
+			p := proto.Proto{Kind: proto.TCP_CREATE_CONN, ConversationID: uint32(conversationId)}
+			_, err = lc.localConn.Write(p.Marshal(lc.cryptoHandler))
 			if err != nil {
-				user_con.Close()
+				userCon.Close()
 				slog.Logger.Error(err)
 				return
 			}
@@ -243,13 +243,13 @@ func start_conversation(local_con net.Conn) {
 			uc := user_conversation{}
 			uc.local = &lc
 			uc.close_chan = make(chan struct{}, 1)
-			uc.id = uint32(conversation_id)
-			uc.user_conn = user_con
-			uc.crypto_handler = lc.crypto_handler
+			uc.id = uint32(conversationId)
+			uc.user_conn = userCon
+			uc.crypto_handler = lc.cryptoHandler
 			lc.user.Store(uc.id, &uc)
 
 			// recode
-			UserTable.Store(user_con.RemoteAddr().String(), user_con.LocalAddr().String())
+			UserTable.Store(userCon.RemoteAddr().String(), userCon.LocalAddr().String())
 
 			go uc.Monitor()
 

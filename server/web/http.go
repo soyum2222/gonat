@@ -78,7 +78,7 @@ func Show(writer http.ResponseWriter, request *http.Request) {
 
 	var ct CT
 
-	conn.ClientTabel.Range(func(key, value interface{}) bool {
+	conn.ClientTable.Range(func(key, value interface{}) bool {
 		ct.ClientTables = append(ct.ClientTables, Table{key.(string), value.(string)})
 		return true
 	})

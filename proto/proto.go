@@ -23,10 +23,10 @@ type Proto struct {
 	Body           []byte
 }
 
-func (p *Proto) Marshal(crypto_handler _interface.Safe) []byte {
+func (p *Proto) Marshal(cryptoHandler _interface.Safe) []byte {
 
 	var err error
-	p.Body, err = crypto_handler.Encrypt(p.Body)
+	p.Body, err = cryptoHandler.Encrypt(p.Body)
 	if err != nil {
 		slog.Logger.Error(err)
 		return nil
@@ -42,7 +42,7 @@ func (p *Proto) Marshal(crypto_handler _interface.Safe) []byte {
 	return body
 }
 
-func (p *Proto) Unmarshal(b []byte, crypto_handler _interface.Safe) {
+func (p *Proto) Unmarshal(b []byte, cryptoHandler _interface.Safe) {
 	if len(b) < 8 {
 		p.Kind = BAD_MESSAGE
 		return
@@ -50,7 +50,7 @@ func (p *Proto) Unmarshal(b []byte, crypto_handler _interface.Safe) {
 	var err error
 	p.Kind = binary.BigEndian.Uint32(b[0:4])
 	p.ConversationID = binary.BigEndian.Uint32(b[4:8])
-	p.Body, err = crypto_handler.Decrypt(b[8:])
+	p.Body, err = cryptoHandler.Decrypt(b[8:])
 	if err != nil {
 		slog.Logger.Error(err)
 	}

@@ -21,7 +21,7 @@ import (
 func GetSafe(crypt string, key string) _interface.Safe {
 	switch crypt {
 	case "aes-128-cbc":
-		return &aes.AesCbc{Ken_len: 16, Key: key}
+		return &aes.AesCbc{KenLen: 16, Key: key}
 	}
 	return nil
 }

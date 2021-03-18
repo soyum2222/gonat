@@ -9,12 +9,12 @@ import (
 )
 
 type AesCbc struct {
-	Key     string
-	Ken_len int
+	Key    string
+	KenLen int
 }
 
 func (a *AesCbc) Encrypt(src []byte) ([]byte, error) {
-	key := evpBytesToKey(a.Key, a.Ken_len)
+	key := evpBytesToKey(a.Key, a.KenLen)
 	return encryptAES(src, key)
 }
 
@@ -25,7 +25,7 @@ func (a *AesCbc) Decrypt(src []byte) ([]byte, error) {
 
 		}
 	}()
-	key := evpBytesToKey(a.Key, a.Ken_len)
+	key := evpBytesToKey(a.Key, a.KenLen)
 	return decryptAES(src, key)
 }
 
